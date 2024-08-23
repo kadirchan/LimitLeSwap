@@ -19,6 +19,14 @@ export class Balances extends BaseBalances<BalancesConfig> {
     }
 
     @runtimeMethod()
+    public async createToken(tokenId: TokenId): Promise<void> {
+        const currentCount = await this.tokenCount.get();
+        await this.tokens.set(currentCount.value, tokenId);
+        await this.tokenCount.set(Field.from(currentCount.value.add(1)));
+        await this.circulatingSupply.set(tokenId, Balance.from(0));
+    }
+
+    @runtimeMethod()
     public async mintToken(tokenId: TokenId, address: PublicKey, amount: Balance): Promise<void> {
         const circulatingSupply = await this.circulatingSupply.get(tokenId);
         const newCirculatingSupply = Balance.from(circulatingSupply.value).add(amount);
