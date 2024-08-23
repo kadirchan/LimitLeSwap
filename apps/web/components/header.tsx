@@ -6,6 +6,8 @@ import truncateMiddle from "truncate-middle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Chain } from "./chain";
 import { Separator } from "./ui/separator";
+import { ArrowRightLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export interface HeaderProps {
   loading: boolean;
@@ -24,12 +26,40 @@ export default function Header({
   balanceLoading,
   blockHeight,
 }: HeaderProps) {
+  const router = useRouter();
+  const handleNavigate = (path: string) => {
+    router.push(path);
+  };
   return (
     <div className="flex items-center justify-between border-b p-2 shadow-sm">
       <div className="container flex">
         <div className="flex basis-6/12 items-center justify-start">
-          <Image className="h-8 w-8" src={protokit} alt={"Protokit logo"} />
+          <ArrowRightLeft className="h-8 w-8 -rotate-45" />
+          <p
+            className="ml-2 cursor-pointer text-xl font-bold"
+            onClick={() => {
+              handleNavigate("/");
+            }}
+          >
+            Todo Swap
+          </p>
           <Separator className="mx-4 h-8" orientation={"vertical"} />
+          <Button
+            className="text-md"
+            onClick={() => {
+              handleNavigate("/swap");
+            }}
+          >
+            Swap
+          </Button>
+          <Button
+            className="text-md"
+            onClick={() => {
+              handleNavigate("/pool");
+            }}
+          >
+            Pool
+          </Button>
           <div className="flex grow">
             <Chain height={blockHeight} />
           </div>
