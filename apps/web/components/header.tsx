@@ -45,6 +45,7 @@ export default function Header({
           </p>
           <Separator className="mx-4 h-8" orientation={"vertical"} />
           <Button
+            variant={"hover"}
             className="text-md"
             onClick={() => {
               handleNavigate("/swap");
@@ -53,6 +54,7 @@ export default function Header({
             Swap
           </Button>
           <Button
+            variant={"hover"}
             className="text-md"
             onClick={() => {
               handleNavigate("/pool");
