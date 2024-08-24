@@ -57,14 +57,29 @@ export default function Header({
             variant={"hover"}
             className="text-md"
             onClick={() => {
+              handleNavigate("/limit-order");
+            }}
+          >
+            Limit Order
+          </Button>
+          <Button
+            variant={"hover"}
+            className="text-md"
+            onClick={() => {
               handleNavigate("/pool");
             }}
           >
             Pool
           </Button>
-          <div className="flex grow">
-            <Chain height={blockHeight} />
-          </div>
+          <Button
+            variant={"hover"}
+            className="text-md"
+            onClick={() => {
+              handleNavigate("/faucet");
+            }}
+          >
+            Faucet
+          </Button>
         </div>
         <div className="flex basis-6/12 flex-row items-center justify-end">
           {/* balance */}
@@ -89,6 +104,9 @@ export default function Header({
             </div>
           </Button>
         </div>
+      </div>
+      <div className=" fixed bottom-2 right-2 p-2">
+        <Chain height={blockHeight} />
       </div>
     </div>
   );
