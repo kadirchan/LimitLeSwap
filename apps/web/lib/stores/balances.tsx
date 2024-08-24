@@ -3,10 +3,11 @@ import { Client, useClientStore } from "./client";
 import { immer } from "zustand/middleware/immer";
 import { PendingTransaction, UnsignedTransaction } from "@proto-kit/sequencer";
 import { Balance, BalancesKey, TokenId } from "@proto-kit/library";
-import { PublicKey, UInt64 } from "o1js";
+import { PublicKey } from "o1js";
 import { useCallback, useEffect } from "react";
 import { useChainStore } from "./chain";
 import { useWalletStore } from "./wallet";
+import { Token, usePoolStore } from "./poolStore";
 
 export interface BalancesState {
   loading: boolean;
@@ -14,8 +15,18 @@ export interface BalancesState {
     // address - balance
     [key: string]: string;
   };
-  loadBalance: (client: Client, address: string) => Promise<void>;
-  faucet: (client: Client, address: string) => Promise<PendingTransaction>;
+  faucetTokenId: string;
+  setFaucetTokenId: (tokenId: string) => void;
+  loadBalance: (
+    client: Client,
+    address: string,
+    tokenId: Token,
+  ) => Promise<void>;
+  faucet: (
+    client: Client,
+    address: string,
+    token: TokenId,
+  ) => Promise<PendingTransaction>;
 }
 
 function isPendingTransaction(
@@ -25,8 +36,6 @@ function isPendingTransaction(
     throw new Error("Transaction is not a PendingTransaction");
 }
 
-export const tokenId = TokenId.from(0);
-
 export const useBalancesStore = create<
   BalancesState,
   [["zustand/immer", never]]
@@ -34,26 +43,31 @@ export const useBalancesStore = create<
   immer((set) => ({
     loading: Boolean(false),
     balances: {},
-    async loadBalance(client: Client, address: string) {
+    faucetTokenId: "0",
+    setFaucetTokenId: (tokenId: string) => set({ faucetTokenId: tokenId }),
+
+    async loadBalance(client: Client, address: string, token: Token) {
       set((state) => {
         state.loading = true;
       });
 
+      const tokenId = TokenId.from(token.tokenId);
       const key = BalancesKey.from(tokenId, PublicKey.fromBase58(address));
-
       const balance = await client.query.runtime.Balances.balances.get(key);
 
       set((state) => {
         state.loading = false;
-        state.balances[address] = balance?.toString() ?? "0";
+        state.balances[token.name] = balance?.toString() ?? "0";
       });
     },
-    async faucet(client: Client, address: string) {
+    async faucet(client: Client, address: string, tokenId: TokenId) {
       const balances = client.runtime.resolve("Balances");
       const sender = PublicKey.fromBase58(address);
+      console.log("Faucet", tokenId.toString());
+      console.log(tokenId);
 
       const tx = await client.transaction(sender, async () => {
-        await balances.addBalance(tokenId, sender, Balance.from(1000));
+        await balances.mintToken(tokenId, sender, Balance.from(1000));
       });
 
       await tx.sign();
@@ -70,12 +84,15 @@ export const useObserveBalance = () => {
   const chain = useChainStore();
   const wallet = useWalletStore();
   const balances = useBalancesStore();
+  const poolStore = usePoolStore();
 
   useEffect(() => {
     if (!client.client || !wallet.wallet) return;
 
-    balances.loadBalance(client.client, wallet.wallet);
-  }, [client.client, chain.block?.height, wallet.wallet]);
+    for (const tokenId of poolStore.tokenList) {
+      balances.loadBalance(client.client, wallet.wallet, tokenId);
+    }
+  }, [client.client, chain.block?.height, wallet.wallet, poolStore.tokenList]);
 };
 
 export const useFaucet = () => {
@@ -89,8 +106,9 @@ export const useFaucet = () => {
     const pendingTransaction = await balances.faucet(
       client.client,
       wallet.wallet,
+      TokenId.from(balances.faucetTokenId),
     );
 
     wallet.addPendingTransaction(pendingTransaction);
-  }, [client.client, wallet.wallet]);
+  }, [client.client, wallet.wallet, balances.faucetTokenId]);
 };

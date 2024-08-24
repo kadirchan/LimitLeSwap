@@ -1,24 +1,28 @@
 "use client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useWalletStore } from "@/lib/stores/wallet";
-import { useFaucet } from "@/lib/stores/balances";
+import { useBalancesStore, useFaucet } from "@/lib/stores/balances";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { usePoolStore } from "@/lib/stores/poolStore";
 
 export default function Faucet() {
   const walletStore = useWalletStore();
   const wallet = walletStore.wallet;
   const onConnectWallet = walletStore.connectWallet;
   const drip = useFaucet();
-  const form = useForm();
+  const [token, setToken] = useState("MINA");
+  const poolStore = usePoolStore();
+  const balances = useBalancesStore();
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
@@ -30,35 +34,46 @@ export default function Faucet() {
                 Get testing (L2) MINA tokens for your wallet
               </p>
             </div>
-            <Form {...form}>
-              <div className="pt-3">
-                <FormField
-                  name="to"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        To{" "}
-                        <span className="text-sm text-zinc-500">
-                          (your wallet)
-                        </span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled
-                          placeholder={
-                            wallet ?? "Please connect a wallet first"
-                          }
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+
+            <div className="pt-3">
+              <Label>
+                To <span className="text-sm text-zinc-500">(your wallet)</span>
+              </Label>
+
+              <Input
+                disabled
+                placeholder={wallet ?? "Please connect a wallet first"}
+              />
+            </div>
+
+            <div className="mt-6 flex flex-row items-center justify-center gap-4">
+              <Select
+                value={token}
+                onValueChange={(value) => {
+                  const tokenId = poolStore.tokenList.find(
+                    (token) => token.name === value,
+                  )?.tokenId;
+                  console.log(tokenId);
+                  balances.setFaucetTokenId(tokenId ?? "0");
+                  setToken(value);
+                }}
+              >
+                <SelectTrigger className=" w-60 rounded-2xl">
+                  <SelectValue placeholder="Select a token to drip" />
+                </SelectTrigger>
+
+                <SelectContent className=" items-center  rounded-2xl text-center">
+                  <SelectItem value="MINA">MINA</SelectItem>
+                  <SelectItem value="USDT">USDT</SelectItem>
+                  <SelectItem value="ETH">ETH</SelectItem>
+                  <SelectItem value="BTC">BTC</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Button
                 size={"lg"}
                 type="submit"
-                className="mt-6 w-full"
+                className=" w-full rounded-2xl"
                 onClick={() => {
                   wallet ?? onConnectWallet();
                   wallet && drip();
@@ -66,7 +81,7 @@ export default function Faucet() {
               >
                 {wallet ? "Drip 💦" : "Connect wallet"}
               </Button>
-            </Form>
+            </div>
           </Card>
         </div>
       </div>
