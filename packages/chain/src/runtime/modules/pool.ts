@@ -78,7 +78,50 @@ export class PoolModule extends RuntimeModule<{}> {
     }
 
     @runtimeMethod()
-    public async addLiquidity() {}
+    public async addLiquidity(
+        tokenA: TokenId,
+        tokenB: TokenId,
+        tokenAmountA: Balance,
+        tokenAmountB: Balance,
+        lpRequested: Balance
+    ) {
+        const smallerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenA, tokenB);
+        const largerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenB, tokenA);
+        const poolId = Poseidon.hash([smallerTokenId, largerTokenId]);
+        const pool = await this.pools.get(poolId);
+        assert(pool.isSome, "Pool does not exist");
+        assert(lpRequested.greaterThan(Balance.from(0)), "LP tokens must be greater than 0");
+
+        const poolAccount = PublicKey.fromGroup(
+            Poseidon.hashToGroup([poolId, smallerTokenId, largerTokenId])
+        );
+
+        const lpTotal = await this.balances.getCirculatingSupply(poolId);
+
+        assert(lpTotal.greaterThan(Balance.from(0)), "Pool is empty");
+
+        const reserveA = await this.balances.getBalance(tokenA, poolAccount);
+        const reserveB = await this.balances.getBalance(tokenB, poolAccount);
+
+        const lpSquare = lpRequested.mul(lpRequested);
+
+        assert(lpSquare.lessThanOrEqual(tokenAmountA.mul(tokenAmountB)), "Invalid LP token amount");
+
+        await this.balances.transfer(
+            tokenA,
+            this.transaction.sender.value,
+            poolAccount,
+            tokenAmountA
+        );
+        await this.balances.transfer(
+            tokenB,
+            this.transaction.sender.value,
+            poolAccount,
+            tokenAmountB
+        );
+        await this.balances.mintToken(poolId, this.transaction.sender.value, lpRequested);
+        // Todo not checked properly
+    }
 
     @runtimeMethod()
     public async removeLiquidity() {}
