@@ -33,6 +33,7 @@ export class Pool extends Struct({
 @runtimeModule()
 export class PoolModule extends RuntimeModule<{}> {
     @state() public pools = StateMap.from<Field, Pool>(Field, Pool);
+    @state() public poolIds = StateMap.from<Field, Field>(Field, Field);
     @state() public poolCount = State.from(Field);
     public constructor(@inject("Balances") private balances: Balances) {
         super();
@@ -58,10 +59,22 @@ export class PoolModule extends RuntimeModule<{}> {
         assert(currentPool.isSome.not(), "Pool already exists");
         assert(tokenA.equals(tokenB).not(), "Tokens must be different");
         const pool = Pool.from(tokenA, tokenB, tokenAmountA, tokenAmountB);
-
-        // todo
+        const requesterBalanceA = await this.balances.getBalance(tokenA, requester);
+        assert(requesterBalanceA.greaterThanOrEqual(tokenAmountA));
+        const requesterBalanceB = await this.balances.getBalance(tokenB, requester);
+        assert(requesterBalanceB.greaterThanOrEqual(tokenAmountB));
         await this.balances.transfer(tokenA, requester, poolAccount, tokenAmountA);
         await this.balances.transfer(tokenB, requester, poolAccount, tokenAmountB);
+        // what if overflow?
+        const lp_amount_threshold = tokenAmountA.mul(tokenAmountB);
+        const requested_square = lp_requested.mul(lp_requested);
+        assert(lp_amount_threshold.greaterThanOrEqual(requested_square));
+        await this.balances.mintToken(poolId, this.transaction.sender.value, lp_requested);
+        await this.pools.set(poolId, pool);
+
+        const currentCount = await this.poolCount.get();
+        await this.poolIds.set(currentCount.value, poolId);
+        await this.poolCount.set(Field.from(currentCount.value.add(1)));
     }
 
     @runtimeMethod()
