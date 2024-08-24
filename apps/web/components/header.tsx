@@ -8,6 +8,7 @@ import { Chain } from "./chain";
 import { Separator } from "./ui/separator";
 import { ArrowRightLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export interface HeaderProps {
   loading: boolean;
@@ -62,7 +63,7 @@ export default function Header({
           >
             Limit Order
           </Button>
-          <Button
+          {/* <Button
             variant={"hover"}
             className="text-md"
             onClick={() => {
@@ -70,7 +71,49 @@ export default function Header({
             }}
           >
             Pool
-          </Button>
+          </Button> */}
+          <Popover>
+            <PopoverTrigger>
+              <Button
+                variant={"hover"}
+                className="text-md"
+                // onClick={() => {
+                //   handleNavigate("/pool");
+                // }}
+              >
+                Pool
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="flex flex-col gap-4 p-1">
+              <Button
+                variant={"hover"}
+                className="text-md"
+                onClick={() => {
+                  handleNavigate("/create-pool");
+                }}
+              >
+                Create Pool
+              </Button>
+              <Button
+                variant={"hover"}
+                className="text-md"
+                onClick={() => {
+                  handleNavigate("/add-liquidity");
+                }}
+              >
+                Add Liquidity
+              </Button>
+              <Button
+                variant={"hover"}
+                className="text-md"
+                onClick={() => {
+                  handleNavigate("/positions");
+                }}
+              >
+                Positions
+              </Button>
+            </PopoverContent>
+          </Popover>
           <Button
             variant={"hover"}
             className="text-md"
