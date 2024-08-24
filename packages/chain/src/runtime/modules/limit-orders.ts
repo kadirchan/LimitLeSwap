@@ -101,5 +101,24 @@ export class LimitOrders extends RuntimeModule<{}> {
     }
 
     @runtimeMethod()
-    public async cancelLimitOrder() {}
+    public async cancelLimitOrder(orderId: Field) {
+        const sender = this.transaction.sender.value;
+        const order = await this.orders.get(orderId);
+        assert(order.value.owner.equals(sender), "Only the owner can cancel the order");
+        assert(order.value.isActive, "Order is already canceled");
+
+        const captivedAmount = await this.captivedAmount.get(
+            UserTokenKey.from(order.value.tokenIn, sender)
+        );
+        const newCaptivedAmount = captivedAmount.value.add(order.value.tokenInAmount);
+
+        await this.captivedAmount.set(
+            UserTokenKey.from(order.value.tokenIn, sender),
+            newCaptivedAmount
+        );
+
+        order.value.isActive = Bool(false);
+
+        await this.orders.set(orderId, order.value);
+    }
 }

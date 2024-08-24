@@ -49,6 +49,14 @@ const startClient = async () => {
     tx.transaction!.nonce = UInt64.from(5);
     tx.transaction = tx.transaction?.sign(publisherKey);
     await tx.send();
+
+    tx = await client.transaction(publisher, async () => {
+        await limitOrder.cancelLimitOrder(Field.from(0));
+    });
+    console.log("Canceling limit order");
+    tx.transaction!.nonce = UInt64.from(6);
+    tx.transaction = tx.transaction?.sign(publisherKey);
+    await tx.send();
 };
 
 await startClient();
