@@ -29,9 +29,9 @@ export default function Faucet() {
         <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
           <Card className="w-full p-4">
             <div className="mb-2">
-              <h2 className="text-xl font-bold">Faucet</h2>
+              <h2 className="text-xl font-bold">Token Faucet</h2>
               <p className="mt-1 text-sm text-zinc-500">
-                Get testing (L2) MINA tokens for your wallet
+                Get testing (L2) tokens for your wallet
               </p>
             </div>
 
@@ -41,6 +41,7 @@ export default function Faucet() {
               </Label>
 
               <Input
+                className="w-full rounded-2xl"
                 disabled
                 placeholder={wallet ?? "Please connect a wallet first"}
               />

@@ -9,6 +9,8 @@ import { Separator } from "./ui/separator";
 import { ArrowRightLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useBalancesStore } from "@/lib/stores/balances";
+import { usePoolStore } from "@/lib/stores/poolStore";
 
 export interface HeaderProps {
   loading: boolean;
@@ -31,6 +33,8 @@ export default function Header({
   const handleNavigate = (path: string) => {
     router.push(path);
   };
+  const balances = useBalancesStore();
+  const poolStore = usePoolStore();
   return (
     <div className="shadow-xs flex items-center justify-between border-b p-4 py-6">
       <div className="container flex">
@@ -119,7 +123,22 @@ export default function Header({
                 {balanceLoading && balance === undefined ? (
                   <Skeleton className="h-4 w-full" />
                 ) : (
-                  <p className="text-xs font-bold">{balance} MINA</p>
+                  <Popover>
+                    <PopoverTrigger>
+                      <p className="text-xs font-bold">
+                        {balances.balances["MINA"]} MINA
+                      </p>
+                    </PopoverTrigger>
+                    <PopoverContent className="flex flex-col gap-4 p-4">
+                      {poolStore.tokenList.map((token) => {
+                        return (
+                          <p key={token.name} className="text-xs font-bold">
+                            {balances.balances[token.name]} {token.name}
+                          </p>
+                        );
+                      })}
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
             </div>
