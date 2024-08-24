@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { ArrowUpDown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function LimitOrder() {
   const walletStore = useWalletStore();
@@ -27,6 +27,21 @@ export default function LimitOrder() {
     rate: "0",
     validForDays: 0,
   });
+
+  useEffect(() => {
+    if (state.sellAmount > 0 && state.buyAmount > 0) {
+      const rate = (state.buyAmount / state.sellAmount).toPrecision(4);
+      setState({
+        ...state,
+        rate,
+      });
+    } else {
+      setState({
+        ...state,
+        rate: "0",
+      });
+    }
+  }, [state.buyAmount, state.sellAmount]);
 
   const handleSubmit = () => {
     console.log("submit");

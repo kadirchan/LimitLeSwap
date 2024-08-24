@@ -32,7 +32,7 @@ export default function Header({
     router.push(path);
   };
   return (
-    <div className="flex items-center justify-between border-b p-2 shadow-sm">
+    <div className="shadow-xs flex items-center justify-between border-b p-4 py-6">
       <div className="container flex">
         <div className="flex basis-6/12 items-center justify-start">
           <ArrowRightLeft className="h-8 w-8 -rotate-45" />
@@ -42,7 +42,7 @@ export default function Header({
               handleNavigate("/");
             }}
           >
-            Todo Swap
+            LimitLe Swap
           </p>
           <Separator className="mx-4 h-8" orientation={"vertical"} />
           <Button
@@ -63,31 +63,16 @@ export default function Header({
           >
             Limit Order
           </Button>
-          {/* <Button
-            variant={"hover"}
-            className="text-md"
-            onClick={() => {
-              handleNavigate("/pool");
-            }}
-          >
-            Pool
-          </Button> */}
           <Popover>
             <PopoverTrigger>
-              <Button
-                variant={"hover"}
-                className="text-md"
-                // onClick={() => {
-                //   handleNavigate("/pool");
-                // }}
-              >
+              <Button variant={"hover"} className="text-md">
                 Pool
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="flex flex-col gap-4 p-1">
+            <PopoverContent className="flex w-48 flex-col gap-4 rounded-2xl p-1">
               <Button
                 variant={"hover"}
-                className="text-md"
+                className="text-md rounded-2xl hover:bg-gray-100"
                 onClick={() => {
                   handleNavigate("/create-pool");
                 }}
@@ -96,7 +81,7 @@ export default function Header({
               </Button>
               <Button
                 variant={"hover"}
-                className="text-md"
+                className="text-md rounded-2xl hover:bg-gray-100"
                 onClick={() => {
                   handleNavigate("/add-liquidity");
                 }}
@@ -105,7 +90,7 @@ export default function Header({
               </Button>
               <Button
                 variant={"hover"}
-                className="text-md"
+                className="text-md rounded-2xl hover:bg-gray-100"
                 onClick={() => {
                   handleNavigate("/positions");
                 }}
@@ -125,7 +110,6 @@ export default function Header({
           </Button>
         </div>
         <div className="flex basis-6/12 flex-row items-center justify-end">
-          {/* balance */}
           {wallet && (
             <div className="mr-4 flex shrink flex-col items-end justify-center">
               <div>
@@ -140,10 +124,13 @@ export default function Header({
               </div>
             </div>
           )}
-          {/* connect wallet */}
-          <Button loading={loading} className="w-44" onClick={onConnectWallet}>
+          <Button
+            loading={loading}
+            className="w-32 rounded-2xl"
+            onClick={onConnectWallet}
+          >
             <div>
-              {wallet ? truncateMiddle(wallet, 7, 7, "...") : "Connect wallet"}
+              {wallet ? truncateMiddle(wallet, 4, 4, "...") : "Connect wallet"}
             </div>
           </Button>
         </div>
