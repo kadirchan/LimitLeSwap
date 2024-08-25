@@ -3,9 +3,7 @@ import React, { useEffect } from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -16,6 +14,17 @@ import { useClientStore } from "@/lib/stores/client";
 import { BalancesKey, TokenId } from "@proto-kit/library";
 import { PublicKey } from "o1js";
 import { useChainStore } from "@/lib/stores/chain";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Positions() {
   const client = useClientStore();
@@ -23,6 +32,7 @@ export default function Positions() {
   const poolStore = usePoolStore();
   const walletStore = useWalletStore();
   const { wallet } = walletStore;
+  const router = useRouter();
 
   useEffect(() => {
     if (!client.client || !wallet) return;
@@ -70,7 +80,6 @@ export default function Positions() {
           <h2 className=" p-4 text-lg font-bold">My Positions</h2>
           <div className="rounded-2xl border">
             <Table>
-              {/* <TableCaption>A list of your recent positions.</TableCaption> */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Pair</TableHead>
@@ -82,28 +91,95 @@ export default function Positions() {
               <TableBody>
                 {poolStore.positionList.length > 0 ? (
                   poolStore.positionList.map((position, i) => (
-                    <TableRow key={i} className=" cursor-pointer">
-                      <TableCell className=" text-center">
-                        {position.token0.name} / {position.token1.name}
-                      </TableCell>
-                      <TableCell className=" text-center">
-                        {position.lpTokenAmount}
-                      </TableCell>
-                      <TableCell className=" flex flex-col gap-2">
-                        <div>
-                          {position.token0Amount} {position.token0.name}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <TableRow key={i} className=" cursor-pointer">
+                          <TableCell className=" text-center">
+                            {position.token0.name} / {position.token1.name}
+                          </TableCell>
+                          <TableCell className=" text-center">
+                            {position.lpTokenAmount}
+                          </TableCell>
+                          <TableCell className=" flex flex-col items-center justify-center gap-2">
+                            <div>
+                              {position.token0Amount} {position.token0.name}
+                            </div>
+                            <div>
+                              {position.token1Amount} {position.token1.name}
+                            </div>
+                          </TableCell>
+                          <TableCell className=" text-center">
+                            {(Number(position.lpTokenAmount) /
+                              Number(position.lpTokenTotalSupply)) *
+                              100}{" "}
+                            %
+                          </TableCell>
+                        </TableRow>
+                      </DialogTrigger>
+                      <DialogContent className="rounded-2xl sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>
+                            Manage {position.token0.name} /{" "}
+                            {position.token1.name} Position
+                          </DialogTitle>
+                          <DialogDescription>
+                            As you provide liquidity, you receive a share of the
+                            0.3% fee cut from all transactions made on the pool
+                            according to your pool share.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className=" flex flex-col gap-2 p-2">
+                          <div className=" flex w-full flex-row justify-between">
+                            <div className="flex text-base">
+                              Your Pool Token Amount:
+                            </div>
+                            <div className="flex">{position.lpTokenAmount}</div>
+                          </div>
+
+                          <div className=" flex w-full flex-row justify-between">
+                            <div className="flex text-base">
+                              Your Pooled {position.token0.name} Amount:
+                            </div>
+                            <div className="flex">{position.token0Amount}</div>
+                          </div>
+
+                          <div className=" flex w-full flex-row justify-between">
+                            <div className="flex text-base">
+                              Your Pooled {position.token1.name} Amount:
+                            </div>
+                            <div className="flex">{position.token1Amount}</div>
+                          </div>
+
+                          <div className=" flex w-full flex-row justify-between">
+                            <div className="flex text-base">
+                              Your Pool Share:
+                            </div>
+                            <div className="flex">
+                              {(Number(position.lpTokenAmount) /
+                                Number(position.lpTokenTotalSupply)) *
+                                100}{" "}
+                              %
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          {position.token1Amount} {position.token1.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className=" text-center">
-                        {(Number(position.lpTokenAmount) /
-                          Number(position.lpTokenTotalSupply)) *
-                          100}{" "}
-                        %
-                      </TableCell>
-                    </TableRow>
+
+                        <DialogFooter className=" gap-4">
+                          <Button
+                            className=" w-24 rounded-2xl"
+                            onClick={() => router.push("/add-liquidity")}
+                          >
+                            Add
+                          </Button>
+                          <Button
+                            className=" w-24 rounded-2xl"
+                            onClick={() => router.push("/remove-liquidity")}
+                          >
+                            Remove
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   ))
                 ) : (
                   <TableRow>
