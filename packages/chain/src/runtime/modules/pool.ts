@@ -1,9 +1,10 @@
 import { runtimeMethod, RuntimeModule, runtimeModule, state } from "@proto-kit/module";
 import { inject } from "tsyringe";
 import { Balances } from "./balances";
-import { Field, Poseidon, Provable, PublicKey, Struct } from "o1js";
+import { Bool, Field, Poseidon, Provable, PublicKey, Struct } from "o1js";
 import { assert, State, StateMap } from "@proto-kit/protocol";
-import { Balance, TokenId } from "@proto-kit/library";
+import { Balance, TokenId, UInt64 } from "@proto-kit/library";
+import { LimitOrders } from "./limit-orders";
 
 export class Pool extends Struct({
     tokenA: TokenId,
@@ -30,12 +31,25 @@ export class Pool extends Struct({
     }
 }
 
+const ORDER_BUNDLE = 10;
+class OrderBundle extends Struct({
+    bundle: Provable.Array(Field, ORDER_BUNDLE),
+}) {
+    public static empty(): OrderBundle {
+        const bundle = Array<Field>(10).fill(Field.from(0));
+        return new OrderBundle({ bundle });
+    }
+}
+
 @runtimeModule()
 export class PoolModule extends RuntimeModule<{}> {
     @state() public pools = StateMap.from<Field, Pool>(Field, Pool);
     @state() public poolIds = StateMap.from<Field, Field>(Field, Field);
     @state() public poolCount = State.from(Field);
-    public constructor(@inject("Balances") private balances: Balances) {
+    public constructor(
+        @inject("Balances") private balances: Balances,
+        @inject("LimitOrders") private limitOrders: LimitOrders
+    ) {
         super();
     }
 
@@ -124,5 +138,164 @@ export class PoolModule extends RuntimeModule<{}> {
     }
 
     @runtimeMethod()
-    public async removeLiquidity() {}
+    public async removeLiquidity(
+        tokenA: TokenId,
+        tokenB: TokenId,
+        requestedA: Balance,
+        requestedB: Balance,
+        lpBurned: Balance
+    ) {
+        const smallerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenA, tokenB);
+        const largerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenB, tokenA);
+        const poolId = Poseidon.hash([smallerTokenId, largerTokenId]);
+        const pool = await this.pools.get(poolId);
+        assert(pool.isSome, "Pool does not exist");
+
+        const poolAccount = PublicKey.fromGroup(
+            Poseidon.hashToGroup([poolId, smallerTokenId, largerTokenId])
+        );
+
+        const reserveA = await this.balances.getBalance(tokenA, poolAccount);
+        const reserveB = await this.balances.getBalance(tokenB, poolAccount);
+
+        const senderLp = await this.balances.getBalance(poolId, this.transaction.sender.value);
+
+        const lpTotal = await this.balances.getCirculatingSupply(poolId);
+
+        assert(senderLp.greaterThanOrEqual(lpBurned), "Not enough LP tokens");
+
+        assert(requestedA.lessThanOrEqual(reserveA), "Not enough token A");
+        assert(requestedB.lessThanOrEqual(reserveB), "Not enough token B");
+
+        assert(requestedA.mul(lpTotal).lessThanOrEqual(senderLp.mul(reserveA)));
+        assert(requestedB.mul(lpTotal).lessThanOrEqual(senderLp.mul(reserveB)));
+
+        await this.balances.burnToken(poolId, this.transaction.sender.value, lpBurned);
+        await this.balances.transfer(
+            tokenA,
+            poolAccount,
+            this.transaction.sender.value,
+            requestedA
+        );
+        await this.balances.transfer(
+            tokenB,
+            poolAccount,
+            this.transaction.sender.value,
+            requestedB
+        );
+    }
+
+    @runtimeMethod()
+    public async rawSwap(
+        tokenIn: TokenId,
+        tokenOut: TokenId,
+        amountIn: Balance,
+        amountOut: Balance
+    ) {
+        assert(amountIn.greaterThan(Balance.from(0)), "AmountIn must be greater than 0");
+        assert(amountOut.greaterThan(Balance.from(0)), "AmountOut must be greater than 0");
+
+        const smallerTokenId = Provable.if(tokenIn.lessThan(tokenOut), tokenIn, tokenOut);
+        const largerTokenId = Provable.if(tokenIn.lessThan(tokenOut), tokenOut, tokenIn);
+        const poolId = Poseidon.hash([smallerTokenId, largerTokenId]);
+        const pool = await this.pools.get(poolId);
+        assert(pool.isSome, "Pool does not exist");
+
+        const poolAccount = PublicKey.fromGroup(
+            Poseidon.hashToGroup([poolId, smallerTokenId, largerTokenId])
+        );
+
+        const senderBalance = await this.balances.getBalance(
+            tokenIn,
+            this.transaction.sender.value
+        );
+        assert(senderBalance.greaterThanOrEqual(amountIn), "Not enough token to swap");
+
+        let reserveIn = await this.balances.getBalance(tokenIn, poolAccount);
+        let reserveOut = await this.balances.getBalance(tokenOut, poolAccount);
+
+        const kPrev = reserveIn.mul(reserveOut).mul(1000n);
+
+        assert(amountOut.lessThanOrEqual(reserveOut), "Not enough token in pool");
+
+        const adjustedReserveIn = amountIn.mul(997n).add(reserveIn.mul(1000n));
+        const adjustedReserveOut = reserveOut.sub(amountOut);
+
+        const k = adjustedReserveIn.mul(adjustedReserveOut);
+
+        assert(k.greaterThanOrEqual(kPrev), "Invalid swap");
+
+        await this.balances.transfer(tokenIn, this.transaction.sender.value, poolAccount, amountIn);
+        await this.balances.transfer(
+            tokenOut,
+            poolAccount,
+            this.transaction.sender.value,
+            amountOut
+        );
+
+        reserveIn = await this.balances.getBalance(tokenIn, poolAccount);
+        reserveOut = await this.balances.getBalance(tokenOut, poolAccount);
+
+        const adjustedPool = Pool.from(tokenIn, tokenOut, reserveIn, reserveOut);
+        await this.pools.set(poolId, adjustedPool);
+    }
+
+    @runtimeMethod()
+    public async swapWithLimit(
+        tokenIn: TokenId,
+        tokenOut: TokenId,
+        amountIn: Balance,
+        amountOut: Balance,
+        limitOrders: OrderBundle
+    ) {
+        const smallerTokenId = Provable.if(tokenIn.lessThan(tokenOut), tokenIn, tokenOut);
+        const largerTokenId = Provable.if(tokenIn.lessThan(tokenOut), tokenOut, tokenIn);
+        const poolId = Poseidon.hash([smallerTokenId, largerTokenId]);
+        const pool = await this.pools.get(poolId);
+        assert(pool.isSome, "Pool does not exist");
+        const senderBalance = await this.balances.getBalance(
+            tokenIn,
+            this.transaction.sender.value
+        );
+        assert(senderBalance.greaterThanOrEqual(amountIn), "Not enough token to swap");
+
+        let remainingAmountIn = amountIn;
+        let limitOrderFills = Balance.from(0);
+
+        for (let i = 0; i < 10; i++) {
+            const limitOrderId = limitOrders.bundle[i];
+            assert(limitOrderId.greaterThanOrEqual(Field.from(0)), "Invalid limit order id");
+            const order = (await this.limitOrders.orders.get(limitOrderId)).value;
+            let isActive = order.isActive.and(
+                order.expiration.lessThanOrEqual(this.network.block.height)
+            );
+            assert(order.tokenOut.equals(tokenIn), "Invalid token out");
+            assert(order.tokenIn.equals(tokenOut), "Invalid token in");
+
+            const amountToFill = UInt64.Unsafe.fromField(
+                Provable.if(isActive, order.tokenOut, Field.from(0))
+            );
+            const amountToFillIn = UInt64.Unsafe.fromField(
+                Provable.if(isActive, order.tokenIn, Field.from(0))
+            );
+            remainingAmountIn = Balance.from(remainingAmountIn.sub(amountToFillIn));
+            limitOrderFills = Balance.from(limitOrderFills.add(amountToFill));
+            await this.balances.transfer(
+                tokenIn,
+                this.transaction.sender.value,
+                order.owner,
+                Balance.from(amountToFill)
+            );
+            await this.balances.transfer(
+                tokenOut,
+                order.owner,
+                this.transaction.sender.value,
+                Balance.from(amountToFillIn)
+            );
+            order.isActive = Bool(false);
+            await this.limitOrders.orders.set(limitOrderId, order);
+        }
+        const remainingAmountOut = amountOut.sub(limitOrderFills);
+        await this.rawSwap(tokenIn, tokenOut, remainingAmountIn, remainingAmountOut);
+    }
 }
