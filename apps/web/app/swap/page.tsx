@@ -15,6 +15,10 @@ import { ArrowUpDown, Route } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Pool, usePoolStore } from "@/lib/stores/poolStore";
 import useHasMounted from "@/lib/customHooks";
+import { useClientStore } from "@/lib/stores/client";
+import { Balance, TokenId } from "@proto-kit/library";
+import { useToast } from "@/components/ui/use-toast";
+import { Poseidon, PublicKey } from "o1js";
 
 export default function Swap() {
   const walletStore = useWalletStore();
@@ -31,6 +35,8 @@ export default function Swap() {
   const [pool, setPool] = useState<Pool | null>(null);
   const poolStore = usePoolStore();
   const hasMounted = useHasMounted();
+  const client = useClientStore();
+  const { toast } = useToast();
 
   useEffect(() => {
     let sellToken = poolStore.tokenList.find(
@@ -92,8 +98,50 @@ export default function Swap() {
     poolStore.poolList,
   ]);
 
-  const handleSubmit = () => {
-    console.log("submit");
+  const handleSubmit = async () => {
+    console.log(state);
+
+    let sellToken = poolStore.tokenList.find(
+      (token) => token.name === state.sellToken,
+    );
+    let buyToken = poolStore.tokenList.find(
+      (token) => token.name === state.buyToken,
+    );
+
+    if (sellToken?.name === buyToken?.name) {
+      toast({
+        title: "Invalid token selection",
+        description: "Please select different tokens to swap",
+      });
+      return;
+    }
+
+    if (!pool || !sellToken || !buyToken || !wallet || !client.client) {
+      return;
+    }
+
+    const tokenIn = TokenId.from(sellToken?.tokenId);
+    const tokenOut = TokenId.from(buyToken?.tokenId);
+    const amountIn = Balance.from(state.sellAmount);
+    const amountOut = Balance.from(Math.floor(state.buyAmount));
+
+    console.log(amountIn.toString(), amountOut.toString());
+    console.log(Poseidon.hash([tokenIn, tokenOut]));
+
+    const poolModule = client.client.runtime.resolve("PoolModule");
+
+    const tx = await client.client.transaction(
+      PublicKey.fromBase58(wallet),
+      async () => {
+        await poolModule.rawSwap(tokenIn, tokenOut, amountIn, amountOut);
+      },
+    );
+
+    await tx.sign();
+    await tx.send();
+
+    //@ts-ignore
+    walletStore.addPendingTransaction(tx.transaction);
   };
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
