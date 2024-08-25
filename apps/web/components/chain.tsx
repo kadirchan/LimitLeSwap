@@ -1,8 +1,9 @@
 import { useClientStore } from "@/lib/stores/client";
-import { Pool, Token, usePoolStore } from "@/lib/stores/poolStore";
+import { Pool, Position, Token, usePoolStore } from "@/lib/stores/poolStore";
+import { useWalletStore } from "@/lib/stores/wallet";
 import { tokens } from "@/lib/tokens";
-import { TokenId } from "@proto-kit/library";
-import { Field } from "o1js";
+import { BalancesKey, TokenId } from "@proto-kit/library";
+import { Field, PublicKey } from "o1js";
 import { useEffect } from "react";
 
 export interface ChainProps {
@@ -12,6 +13,8 @@ export interface ChainProps {
 export function Chain({ height }: ChainProps) {
   const client = useClientStore();
   const poolStore = usePoolStore();
+  const walletStore = useWalletStore();
+  const { wallet } = walletStore;
 
   useEffect(() => {
     if (!client.client) return;
@@ -45,6 +48,7 @@ export function Chain({ height }: ChainProps) {
         await client.client!.query.runtime.PoolModule.poolCount.get();
 
       const poolList: Pool[] = [];
+      const positionList: Position[] = [];
 
       if (poolCount) {
         // console.log(Number(poolCount.toString()));
@@ -98,9 +102,40 @@ export function Chain({ height }: ChainProps) {
             // console.log(pool);
             poolList.push(pool);
           }
+
+          if (wallet) {
+            const pool = poolList[i];
+            const userKey = BalancesKey.from(
+              TokenId.from(poolId),
+              PublicKey.fromBase58(wallet),
+            );
+            const userLpBalance =
+              await client.client!.query.runtime.Balances.balances.get(userKey);
+            if (!userLpBalance) {
+              continue;
+            }
+
+            const position: Position = {
+              poolId: poolId,
+              token0: pool.token0,
+              token1: pool.token1,
+              token0Amount: (
+                (Number(pool.token0Amount) * Number(userLpBalance.toString())) /
+                Number(pool.lpTokenSupply)
+              ).toString(),
+              token1Amount: (
+                (Number(pool.token1Amount) * Number(userLpBalance.toString())) /
+                Number(pool.lpTokenSupply)
+              ).toString(),
+              lpTokenAmount: userLpBalance.toString(),
+              lpTokenTotalSupply: pool.lpTokenSupply,
+            };
+            positionList.push(position);
+          }
         }
 
         poolStore.setPoolList(poolList);
+        poolStore.setPositionList(positionList);
       }
     })();
   }, [height, client.client]);

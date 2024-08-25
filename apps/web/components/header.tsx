@@ -96,6 +96,15 @@ export default function Header({
                 variant={"hover"}
                 className="text-md rounded-2xl hover:bg-gray-100"
                 onClick={() => {
+                  handleNavigate("/remove-liquidity");
+                }}
+              >
+                Remove Liquidity
+              </Button>
+              <Button
+                variant={"hover"}
+                className="text-md rounded-2xl hover:bg-gray-100"
+                onClick={() => {
                   handleNavigate("/positions");
                 }}
               >
