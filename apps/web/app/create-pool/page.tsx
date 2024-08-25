@@ -12,6 +12,11 @@ import {
 } from "@/components/ui/select";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { usePoolStore } from "@/lib/stores/poolStore";
+import { useClientStore } from "@/lib/stores/client";
+import { Balance, TokenId } from "@proto-kit/library";
+import { PublicKey } from "o1js";
 
 export default function CreatePool() {
   const walletStore = useWalletStore();
@@ -23,6 +28,87 @@ export default function CreatePool() {
     tokenA: "MINA",
     tokenB: "USDT",
   });
+  const { toast } = useToast();
+  const poolStore = usePoolStore();
+  const client = useClientStore();
+
+  const handleSubmit = async () => {
+    console.log(state);
+
+    let tokenA = poolStore.tokenList.find(
+      (token) => token.name === state.tokenA,
+    );
+    let tokenB = poolStore.tokenList.find(
+      (token) => token.name === state.tokenB,
+    );
+
+    if (tokenA?.name === tokenB?.name) {
+      toast({
+        title: "Invalid token selection",
+        description: "Please select different tokens to create pool",
+      });
+      return;
+    }
+
+    const pool = poolStore.poolList.find((pool) => {
+      (pool.token0.name === tokenA?.name &&
+        pool.token1.name === tokenB?.name) ||
+        (pool.token0.name === tokenB?.name &&
+          pool.token1.name === tokenA?.name);
+    });
+
+    if (pool) {
+      toast({
+        title: "Pool already exists",
+        description: "Please select a valid pool to create",
+      });
+      return;
+    }
+
+    const tokenAmountA = state.tokenAmountA;
+    const tokenAmountB = state.tokenAmountB;
+
+    if (tokenAmountA <= 0 || tokenAmountB <= 0) {
+      toast({
+        title: "Invalid token amount",
+        description: "Please enter a valid token amount",
+      });
+      return;
+    }
+
+    console.log("Creating pool");
+
+    if (client.client && wallet && tokenA && tokenB) {
+      const TokenIdA = TokenId.from(tokenA.tokenId);
+      const TokenIdB = TokenId.from(tokenB.tokenId);
+      const TokenAmountA = Balance.from(tokenAmountA);
+      const TokenAmountB = Balance.from(tokenAmountB);
+      const lpRequested = Balance.from(
+        Math.floor(Math.sqrt(tokenAmountA * tokenAmountB)),
+      );
+
+      const poolModule = client.client.runtime.resolve("PoolModule");
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.createPool(
+            TokenIdA,
+            TokenIdB,
+            TokenAmountA,
+            TokenAmountB,
+            PublicKey.fromBase58(wallet),
+            lpRequested,
+          );
+        },
+      );
+
+      await tx.sign();
+      await tx.send();
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
+  };
 
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
@@ -116,6 +202,7 @@ export default function CreatePool() {
               className="mt-6 w-full rounded-2xl"
               onClick={() => {
                 wallet ?? onConnectWallet();
+                wallet && handleSubmit();
               }}
             >
               {wallet ? "Create Pool" : "Connect wallet"}
