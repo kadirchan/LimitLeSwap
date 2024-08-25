@@ -17,15 +17,6 @@ import { BalancesKey, TokenId } from "@proto-kit/library";
 import { PublicKey } from "o1js";
 import { useChainStore } from "@/lib/stores/chain";
 
-const positions = [
-  {
-    pair: "MINA/USDT",
-    totalPoolTokens: "100",
-    providedTokenA: "31",
-    providedTokenB: "12",
-    poolShare: "10%",
-  },
-];
 export default function Positions() {
   const client = useClientStore();
   const chainStore = useChainStore();
@@ -89,30 +80,38 @@ export default function Positions() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {poolStore.positionList.map((position, i) => (
-                  <TableRow key={i} className=" cursor-pointer">
-                    <TableCell className=" text-center">
-                      {position.token0.name} / {position.token1.name}
-                    </TableCell>
-                    <TableCell className=" text-center">
-                      {position.lpTokenAmount}
-                    </TableCell>
-                    <TableCell className=" flex flex-col gap-2">
-                      <div>
-                        {position.token0Amount} {position.token0.name}
-                      </div>
-                      <div>
-                        {position.token1Amount} {position.token1.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className=" text-center">
-                      {(Number(position.lpTokenAmount) /
-                        Number(position.lpTokenTotalSupply)) *
-                        100}{" "}
-                      %
+                {poolStore.positionList.length > 0 ? (
+                  poolStore.positionList.map((position, i) => (
+                    <TableRow key={i} className=" cursor-pointer">
+                      <TableCell className=" text-center">
+                        {position.token0.name} / {position.token1.name}
+                      </TableCell>
+                      <TableCell className=" text-center">
+                        {position.lpTokenAmount}
+                      </TableCell>
+                      <TableCell className=" flex flex-col gap-2">
+                        <div>
+                          {position.token0Amount} {position.token0.name}
+                        </div>
+                        <div>
+                          {position.token1Amount} {position.token1.name}
+                        </div>
+                      </TableCell>
+                      <TableCell className=" text-center">
+                        {(Number(position.lpTokenAmount) /
+                          Number(position.lpTokenTotalSupply)) *
+                          100}{" "}
+                        %
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className=" text-center">
+                      No positions found
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
