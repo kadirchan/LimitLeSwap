@@ -247,6 +247,7 @@ export default function Swap() {
               size={"lg"}
               type="submit"
               className="mt-6 w-full rounded-2xl"
+              disabled={!wallet || !pool}
               onClick={() => {
                 wallet ?? onConnectWallet();
                 wallet && handleSubmit();
