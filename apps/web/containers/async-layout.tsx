@@ -34,7 +34,7 @@ export default function AsyncLayout({ children }: { children: ReactNode }) {
     <>
       <Header
         loading={client.loading}
-        balance={balances.balances[wallet.wallet ?? ""]}
+        balance={balances.balances[wallet.wallet ? "MINA" : ""]}
         balanceLoading={loading}
         wallet={wallet.wallet}
         onConnectWallet={wallet.connectWallet}
