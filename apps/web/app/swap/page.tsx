@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/select";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { ArrowUpDown, Route } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Pool, usePoolStore } from "@/lib/stores/poolStore";
+import useHasMounted from "@/lib/customHooks";
 
 export default function Swap() {
   const walletStore = useWalletStore();
@@ -25,6 +27,70 @@ export default function Swap() {
     buyAmount: 0,
     priceImpact: "0",
   });
+
+  const [pool, setPool] = useState<Pool | null>(null);
+  const poolStore = usePoolStore();
+  const hasMounted = useHasMounted();
+
+  useEffect(() => {
+    let sellToken = poolStore.tokenList.find(
+      (token) => token.name === state.sellToken,
+    );
+    let buyToken = poolStore.tokenList.find(
+      (token) => token.name === state.buyToken,
+    );
+    const pool = poolStore.poolList.find((pool) => {
+      return (
+        (pool.token0.name === sellToken?.name &&
+          pool.token1.name === buyToken?.name) ||
+        (pool.token0.name === buyToken?.name &&
+          pool.token1.name === sellToken?.name)
+      );
+    });
+    setPool(pool ?? null);
+    // console.log(pool);
+    if (pool) {
+      const sellAmount = Number(state.sellAmount);
+      const buyAmount = Number(state.buyAmount);
+
+      const poolSellTokenReserve =
+        pool.token0.name === sellToken?.name
+          ? Number(pool.token0Amount)
+          : Number(pool.token1Amount);
+
+      const poolBuyTokenReserve =
+        pool.token0.name === buyToken?.name
+          ? Number(pool.token0Amount)
+          : Number(pool.token1Amount);
+
+      if (sellAmount >= poolSellTokenReserve) {
+        setState({
+          ...state,
+          buyAmount: 0,
+        });
+        return;
+      } else {
+        const amountInWithFee = sellAmount * 997;
+
+        const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
+        const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
+        const amountOut = poolBuyTokenReserve - numerator / denominator;
+
+        const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
+        setState({
+          ...state,
+          buyAmount: amountOut,
+          priceImpact: priceImpact.toPrecision(2),
+        });
+      }
+    }
+  }, [
+    state.sellToken,
+    state.buyToken,
+    hasMounted,
+    state.sellAmount,
+    poolStore.poolList,
+  ]);
 
   const handleSubmit = () => {
     console.log("submit");
@@ -138,7 +204,7 @@ export default function Swap() {
                 wallet && handleSubmit();
               }}
             >
-              {wallet ? "Swap" : "Connect wallet"}
+              {wallet ? (pool ? "Swap" : "Pool Not Found") : "Connect wallet"}
             </Button>
           </Card>
         </div>
