@@ -1,6 +1,7 @@
 import { useClientStore } from "@/lib/stores/client";
 import { Pool, Token, usePoolStore } from "@/lib/stores/poolStore";
 import { tokens } from "@/lib/tokens";
+import { TokenId } from "@proto-kit/library";
 import { Field } from "o1js";
 import { useEffect } from "react";
 
@@ -67,6 +68,11 @@ export function Chain({ height }: ChainProps) {
           const token0Amount = pool.tokenAmountA.toBigInt().toString();
           const token1Amount = pool.tokenAmountB.toBigInt().toString();
 
+          const lpTokenSupply =
+            await client.client!.query.runtime.Balances.circulatingSupply.get(
+              TokenId.from(poolId.toString()),
+            );
+
           if (token0Id < token1Id) {
             const pool: Pool = {
               poolId: poolId.toString(),
@@ -74,6 +80,7 @@ export function Chain({ height }: ChainProps) {
               token1: tokenList.find((token) => token.tokenId === token1Id)!,
               token0Amount,
               token1Amount,
+              lpTokenSupply: lpTokenSupply?.toString() ?? "0",
             };
 
             // console.log(pool);
@@ -85,6 +92,7 @@ export function Chain({ height }: ChainProps) {
               token1: tokenList.find((token) => token.tokenId === token0Id)!,
               token1Amount,
               token0Amount,
+              lpTokenSupply: lpTokenSupply?.toString() ?? "0",
             };
 
             // console.log(pool);
