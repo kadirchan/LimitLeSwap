@@ -10,14 +10,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { useClientStore } from "@/lib/stores/client";
+import { usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { ArrowUpDown } from "lucide-react";
+import { Field, PublicKey, UInt64 } from "o1js";
+import { TokenId } from "@proto-kit/library";
 import React, { useEffect, useState } from "react";
 
 export default function LimitOrder() {
   const walletStore = useWalletStore();
   const wallet = walletStore.wallet;
   const onConnectWallet = walletStore.connectWallet;
+  const client = useClientStore();
+  const { toast } = useToast();
+  const poolStore = usePoolStore();
 
   const [state, setState] = useState({
     sellToken: "MINA",
@@ -43,8 +51,62 @@ export default function LimitOrder() {
     }
   }, [state.buyAmount, state.sellAmount]);
 
-  const handleSubmit = () => {
-    console.log("submit");
+  const handleSubmit = async () => {
+    console.log(state);
+
+    let sellToken = poolStore.tokenList.find(
+      (token) => token.name === state.sellToken,
+    );
+    let buyToken = poolStore.tokenList.find(
+      (token) => token.name === state.buyToken,
+    );
+
+    if (sellToken?.name === buyToken?.name) {
+      toast({
+        title: "Invalid token selection",
+        description: "Please select different tokens to swap",
+      });
+      return;
+    }
+
+    const sellAmount = state.sellAmount;
+    const buyAmount = state.buyAmount;
+    const validForDays = state.validForDays;
+
+    console.log({
+      sellToken,
+      buyToken,
+      sellAmount,
+      buyAmount,
+      validForDays,
+    });
+
+    if (client.client && wallet && sellToken && buyToken) {
+      const limitOrders = client.client.runtime.resolve("LimitOrders");
+      const tokenIn = TokenId.from(sellToken.tokenId);
+      const tokenOut = TokenId.from(buyToken.tokenId);
+      const amountIn = Field.from(sellAmount);
+      const amountOut = Field.from(buyAmount);
+      const expiration = UInt64.from(validForDays * 86400);
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await limitOrders.createLimitOrder(
+            tokenIn,
+            tokenOut,
+            amountIn,
+            amountOut,
+            expiration,
+          );
+        },
+      );
+      console.log("Creating limit order");
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
   };
 
   return (
