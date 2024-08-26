@@ -12,9 +12,9 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import useHasMounted from "@/lib/customHooks";
 import { useClientStore } from "@/lib/stores/client";
-import { Pool, usePoolStore } from "@/lib/stores/poolStore";
+import { Pool, Position, usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
-import { Droplets, Plus } from "lucide-react";
+import { ArrowDown, Droplets, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 export default function AddLiq() {
@@ -31,6 +31,7 @@ export default function AddLiq() {
   };
 
   const [pool, setPool] = useState<Pool | null>(null);
+  const [position, setPosition] = useState<Position | null>(null);
   const [state, setState] = useState({
     tokenAmountA: 0,
     tokenAmountB: 0,
@@ -52,6 +53,13 @@ export default function AddLiq() {
       );
     });
     setPool(pool ?? null);
+    if (pool) {
+      const pos = poolStore.positionList.find((pos) => {
+        return pos.poolId.toString() === pool.poolId.toString();
+      });
+
+      setPosition(pos ?? null);
+    }
   }, [state.tokenA, state.tokenB, hasMounted, poolStore.poolList]);
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
@@ -59,7 +67,7 @@ export default function AddLiq() {
         <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
           <Card className="w-full border-0 p-4 shadow-none">
             <div className="mb-2 flex flex-row items-center justify-center gap-2">
-              <h2 className="text-2xl font-bold">Provide Liquidity</h2>
+              <h2 className="text-2xl font-bold">Add Liquidity</h2>
               <Droplets className="h-6 w-6" />
             </div>
 
@@ -135,6 +143,52 @@ export default function AddLiq() {
                   <SelectItem value="BTC">BTC</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="my-2 flex w-96 items-center justify-center">
+              <ArrowDown className="h-6 w-6" />
+            </div>
+
+            <div className="mt-2 flex flex-col gap-4 rounded-2xl border p-4">
+              <h3 className=" py-2 text-sm">
+                Current Prices and Your Pool Share
+              </h3>
+              <div className="grid grid-cols-3">
+                <div className="col-span-1 flex flex-col items-center">
+                  <p>
+                    {pool && Number(pool?.lpTokenSupply) > 0
+                      ? (
+                          Number(pool?.token0Amount) /
+                          Number(pool?.token1Amount)
+                        ).toPrecision(2)
+                      : 0}
+                  </p>
+                  <p className=" text-sm text-gray-600">{`${state.tokenA} / ${state.tokenB}`}</p>
+                </div>
+                <div className="col-span-1 flex flex-col items-center">
+                  <p>
+                    {pool && Number(pool?.lpTokenSupply) > 0
+                      ? (
+                          Number(pool?.token1Amount) /
+                          Number(pool?.token0Amount)
+                        ).toPrecision(2)
+                      : 0}
+                  </p>
+                  <p className=" text-sm text-gray-600">{`${state.tokenB} / ${state.tokenA}`}</p>
+                </div>
+                <div className="col-span-1 flex flex-col items-center">
+                  <p>{`${
+                    pool && position
+                      ? (
+                          (Number(position.lpTokenAmount) /
+                            Number(pool.lpTokenSupply)) *
+                          100
+                        ).toPrecision(2)
+                      : 0
+                  } %`}</p>
+                  <p className=" text-sm text-gray-600">Share of pool</p>
+                </div>
+              </div>
             </div>
 
             <Button
