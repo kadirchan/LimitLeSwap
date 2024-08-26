@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { useBalancesStore, useObserveBalance } from "@/lib/stores/balances";
 import { useChainStore, usePollBlockHeight } from "@/lib/stores/chain";
@@ -32,16 +33,18 @@ export default function AsyncLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <Header
-        loading={client.loading}
-        balance={balances.balances[wallet.wallet ? "MINA" : ""]}
-        balanceLoading={loading}
-        wallet={wallet.wallet}
-        onConnectWallet={wallet.connectWallet}
-        blockHeight={chain.block?.height ?? "-"}
-      />
-      {children}
-      <Toaster />
+      <ThemeProvider attribute="class" defaultTheme="light">
+        <Header
+          loading={client.loading}
+          balance={balances.balances[wallet.wallet ? "MINA" : ""]}
+          balanceLoading={loading}
+          wallet={wallet.wallet}
+          onConnectWallet={wallet.connectWallet}
+          blockHeight={chain.block?.height ?? "-"}
+        />
+        {children}
+        <Toaster />
+      </ThemeProvider>
     </>
   );
 }

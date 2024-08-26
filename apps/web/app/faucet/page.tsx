@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePoolStore } from "@/lib/stores/poolStore";
 
 export default function Faucet() {
@@ -21,8 +21,23 @@ export default function Faucet() {
   const onConnectWallet = walletStore.connectWallet;
   const drip = useFaucet();
   const [token, setToken] = useState("MINA");
+  const [loading, setLoading] = useState(true);
   const poolStore = usePoolStore();
   const balances = useBalancesStore();
+
+  useEffect(() => {
+    if (poolStore.tokenList.length > 0) {
+      const tokenId = poolStore.tokenList.find(
+        (_token) => _token.name === token,
+      )?.tokenId;
+      console.log(tokenId);
+      balances.setFaucetTokenId(tokenId ?? "0");
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+  }, [token, poolStore.tokenList]);
+
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
@@ -51,11 +66,6 @@ export default function Faucet() {
               <Select
                 value={token}
                 onValueChange={(value) => {
-                  const tokenId = poolStore.tokenList.find(
-                    (token) => token.name === value,
-                  )?.tokenId;
-                  console.log(tokenId);
-                  balances.setFaucetTokenId(tokenId ?? "0");
                   setToken(value);
                 }}
               >
@@ -75,6 +85,7 @@ export default function Faucet() {
                 size={"lg"}
                 type="submit"
                 className=" w-full rounded-2xl"
+                disabled={!wallet || loading}
                 onClick={() => {
                   wallet ?? onConnectWallet();
                   wallet && drip();

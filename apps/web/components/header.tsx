@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import protokit from "@/public/protokit-zinc.svg";
-import Image from "next/image";
 // @ts-ignore
 import truncateMiddle from "truncate-middle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useBalancesStore } from "@/lib/stores/balances";
 import { usePoolStore } from "@/lib/stores/poolStore";
+import { ModeToggle } from "./mode-toggle";
 
 export interface HeaderProps {
   loading: boolean;
@@ -161,6 +160,7 @@ export default function Header({
               {wallet ? truncateMiddle(wallet, 4, 4, "...") : "Connect wallet"}
             </div>
           </Button>
+          <ModeToggle />
         </div>
       </div>
       <div className=" fixed bottom-2 right-2 p-2">
