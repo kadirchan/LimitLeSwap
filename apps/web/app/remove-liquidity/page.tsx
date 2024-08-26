@@ -57,7 +57,7 @@ export default function RemoveLiq() {
               <Flame className="h-6 w-6" />
             </div>
 
-            <div className="flex flex-col items-center gap-4 rounded-2xl border p-4">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border p-4 pb-6">
               <div className="flex flex-row items-center">
                 <div className=" flex flex-col">
                   <Label className=" text-lg">
