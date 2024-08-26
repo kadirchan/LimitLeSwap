@@ -59,18 +59,35 @@ export default function RemoveLiq() {
 
             <div className="flex flex-col items-center gap-4 rounded-2xl border p-4">
               <div className="flex flex-row items-center">
-                <Label>
-                  {" "}
-                  Remove LP Amount
-                  <CustomInput
-                    value={state.removeAmount ?? 0}
-                    placeholder={"0"}
-                    pattern="^[0-9]*[.,]?[0-9]*$"
-                    minLength={1}
-                    maxLength={40}
-                    inputMode="decimal"
-                  />
-                </Label>
+                <div className=" flex flex-col">
+                  <Label className=" text-lg">
+                    {" "}
+                    Remove Position
+                    <p className=" px-3 py-2 text-4xl font-bold">
+                      {position
+                        ? Math.ceil(
+                            (state.removeAmount /
+                              Number(position?.lpTokenAmount)) *
+                              100,
+                          )
+                        : 0}{" "}
+                      %
+                    </p>
+                  </Label>
+                  <Label className="mt-2">
+                    {" "}
+                    Remove LP Amount
+                    <CustomInput
+                      value={state.removeAmount ?? 0}
+                      placeholder={"0"}
+                      pattern="^[0-9]*[.,]?[0-9]*$"
+                      minLength={1}
+                      maxLength={40}
+                      inputMode="decimal"
+                      className=" text-2xl"
+                    />
+                  </Label>
+                </div>
 
                 <Select
                   value={state.selectedPosition}
@@ -111,40 +128,50 @@ export default function RemoveLiq() {
             </div>
 
             <div className=" flex flex-col items-center rounded-2xl border p-4">
-              <div className=" flex flex-row justify-between">
-                <CustomInput
-                  value={
-                    position
-                      ? (Number(position?.token0Amount) * state.removeAmount) /
-                        Number(position?.lpTokenAmount)
-                      : 0
-                  }
-                  readOnly
-                  placeholder={"0"}
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  minLength={1}
-                  maxLength={40}
-                  inputMode="decimal"
-                />
-                <p>{position?.token0.name}</p>
-              </div>
-              <div className=" flex flex-row justify-between">
-                <CustomInput
-                  value={
-                    position
-                      ? (Number(position?.token1Amount) * state.removeAmount) /
-                        Number(position?.lpTokenAmount)
-                      : 0
-                  }
-                  readOnly
-                  placeholder={"0"}
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  minLength={1}
-                  maxLength={40}
-                  inputMode="decimal"
-                />
-                <p>{position?.token1.name}</p>
-              </div>
+              <Label>
+                {" "}
+                You will receive
+                <div className=" flex flex-row items-center justify-between">
+                  <CustomInput
+                    value={
+                      position
+                        ? (
+                            (Number(position?.token0Amount) *
+                              state.removeAmount) /
+                            Number(position?.lpTokenAmount)
+                          ).toPrecision(4)
+                        : 0
+                    }
+                    readOnly
+                    placeholder={"0"}
+                    pattern="^[0-9]*[.,]?[0-9]*$"
+                    minLength={1}
+                    maxLength={40}
+                    inputMode="decimal"
+                  />
+                  <p className=" font-bold">{position?.token0.name}</p>
+                </div>
+                <div className=" flex flex-row items-center justify-between">
+                  <CustomInput
+                    value={
+                      position
+                        ? (
+                            (Number(position?.token1Amount) *
+                              state.removeAmount) /
+                            Number(position?.lpTokenAmount)
+                          ).toPrecision(4)
+                        : 0
+                    }
+                    readOnly
+                    placeholder={"0"}
+                    pattern="^[0-9]*[.,]?[0-9]*$"
+                    minLength={1}
+                    maxLength={40}
+                    inputMode="decimal"
+                  />
+                  <p className=" font-bold">{position?.token1.name}</p>
+                </div>
+              </Label>
             </div>
 
             <Button
