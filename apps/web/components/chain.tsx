@@ -111,7 +111,7 @@ export function Chain({ height }: ChainProps) {
             );
             const userLpBalance =
               await client.client!.query.runtime.Balances.balances.get(userKey);
-            if (!userLpBalance) {
+            if (!userLpBalance || userLpBalance.toString() === "0") {
               continue;
             }
 

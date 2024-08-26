@@ -183,6 +183,14 @@ export class PoolModule extends RuntimeModule<{}> {
             this.transaction.sender.value,
             requestedB
         );
+
+        const updatedPool = Pool.from(
+            tokenA,
+            tokenB,
+            reserveA.sub(requestedA),
+            reserveB.sub(requestedB)
+        );
+        await this.pools.set(poolId, updatedPool);
     }
 
     @runtimeMethod()

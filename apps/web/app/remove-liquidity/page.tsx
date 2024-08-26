@@ -16,7 +16,9 @@ import useHasMounted from "@/lib/customHooks";
 import { useClientStore } from "@/lib/stores/client";
 import { Pool, Position, usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
+import { Balance, TokenId } from "@proto-kit/library";
 import { ArrowDown, Flame, Plus } from "lucide-react";
+import { PublicKey } from "o1js";
 import React, { useEffect, useState } from "react";
 
 export default function RemoveLiq() {
@@ -27,10 +29,6 @@ export default function RemoveLiq() {
   const hasMounted = useHasMounted();
   const client = useClientStore();
   const { toast } = useToast();
-
-  const handleSubmit = () => {
-    console.log("submit");
-  };
 
   const [position, setPosition] = useState<Position | null>(null);
   const [state, setState] = useState({
@@ -47,6 +45,48 @@ export default function RemoveLiq() {
     poolStore.positionList,
     client.client,
   ]);
+
+  const handleSubmit = async () => {
+    console.log(state);
+
+    if (!position) {
+      toast({
+        title: "Error",
+        description: "Please select a position",
+      });
+      return;
+    }
+    if (client.client && wallet) {
+      const poolModule = client.client.runtime.resolve("PoolModule");
+      const removeAmount0 = Math.floor(
+        (Number(position.token0Amount) * state.removeAmount) /
+          Number(position.lpTokenAmount),
+      );
+      const removeAmount1 = Math.floor(
+        (Number(position.token1Amount) * state.removeAmount) /
+          Number(position.lpTokenAmount),
+      );
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.removeLiquidity(
+            TokenId.from(position.token0.tokenId),
+            TokenId.from(position.token1.tokenId),
+            Balance.from(removeAmount0),
+            Balance.from(removeAmount1),
+            Balance.from(state.removeAmount),
+          );
+        },
+      );
+
+      console.log("Remove", removeAmount0, removeAmount1, state.removeAmount);
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
+  };
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
@@ -94,6 +134,7 @@ export default function RemoveLiq() {
                   onValueChange={(value) => {
                     setState({ ...state, selectedPosition: value });
                   }}
+                  disabled={poolStore.positionList.length === 0}
                 >
                   <SelectTrigger className=" w-60 rounded-2xl">
                     <SelectValue placeholder="Select position" />
@@ -118,8 +159,12 @@ export default function RemoveLiq() {
                 onValueChange={(value) => {
                   const newLpTokenAmount =
                     (Number(position?.lpTokenAmount) * value[0]) / 100;
-                  setState({ ...state, removeAmount: newLpTokenAmount });
+                  setState({
+                    ...state,
+                    removeAmount: Math.floor(newLpTokenAmount),
+                  });
                 }}
+                disabled={poolStore.positionList.length === 0 || !position}
               />
             </div>
 
