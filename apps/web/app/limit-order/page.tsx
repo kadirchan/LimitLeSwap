@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { CustomInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,6 +18,9 @@ import { ArrowUpDown } from "lucide-react";
 import { Field, PublicKey, UInt64 } from "o1js";
 import { TokenId } from "@proto-kit/library";
 import React, { useEffect, useState } from "react";
+import OrderBook from "@/components/orderBook";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import MyOrders from "@/components/myOrders";
 
 export default function LimitOrder() {
   const walletStore = useWalletStore();
@@ -111,134 +114,23 @@ export default function LimitOrder() {
 
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
-      <div className="flex h-full w-full items-center justify-center pt-16">
-        <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Card className="w-full border-0 p-4 shadow-none">
-            <div className="mb-2 flex flex-row items-center justify-center gap-2">
-              <h2 className="text-2xl font-bold">Limit Order</h2>
-            </div>
-
-            <div className="flex flex-row items-center rounded-2xl border p-4">
-              <Label className="px-3 text-sm text-gray-600">
-                Sell
-                <CustomInput
-                  value={state.sellAmount}
-                  onChange={(e) => {
-                    setState({
-                      ...state,
-                      sellAmount: Number(e.target.value),
-                    });
-                  }}
-                  placeholder={"0"}
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  minLength={1}
-                  maxLength={40}
-                  inputMode="decimal"
-                  type="number"
-                />
-              </Label>
-
-              <Select
-                value={state.sellToken}
-                onValueChange={(value) => {
-                  setState({ ...state, sellToken: value });
-                }}
-              >
-                <SelectTrigger className=" w-60 rounded-2xl">
-                  <SelectValue placeholder="Select a token to swap" />
-                </SelectTrigger>
-
-                <SelectContent className=" items-center  rounded-2xl text-center">
-                  <SelectItem value="MINA">MINA</SelectItem>
-                  <SelectItem value="USDT">USDT</SelectItem>
-                  <SelectItem value="ETH">ETH</SelectItem>
-                  <SelectItem value="BTC">BTC</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="relative my-2 w-96">
-              <Button
-                variant={"outline"}
-                className=" absolute bottom-0 left-0 right-0 top-0 mx-auto my-auto border-0  ring-1 ring-border ring-offset-4 hover:bg-card"
-                size={"icon"}
-                onClick={() => {
-                  const sell = state.sellToken;
-                  const buy = state.buyToken;
-
-                  setState({
-                    ...state,
-                    sellToken: buy,
-                    buyToken: sell,
-                  });
-                }}
-              >
-                <ArrowUpDown className="h-3 w-3 "></ArrowUpDown>
-              </Button>
-            </div>
-
-            <div className="flex flex-row items-center rounded-2xl border p-4">
-              <Label className="px-3 text-sm text-gray-600">
-                For
-                <CustomInput
-                  value={state.buyAmount}
-                  onChange={(e) => {
-                    setState({
-                      ...state,
-                      buyAmount: Number(e.target.value),
-                    });
-                  }}
-                  placeholder={"0"}
-                  pattern="^[0-9]*[.,]?[0-9]*$"
-                  minLength={1}
-                  maxLength={40}
-                  inputMode="decimal"
-                  type="number"
-                />
-              </Label>
-
-              <Select
-                value={state.buyToken}
-                onValueChange={(value) => {
-                  setState({ ...state, buyToken: value });
-                }}
-              >
-                <SelectTrigger className=" w-60 rounded-2xl">
-                  <SelectValue placeholder="Select a token to swap" />
-                </SelectTrigger>
-
-                <SelectContent className=" items-center  rounded-2xl text-center">
-                  <SelectItem value="MINA">MINA</SelectItem>
-                  <SelectItem value="USDT">USDT</SelectItem>
-                  <SelectItem value="ETH">ETH</SelectItem>
-                  <SelectItem value="BTC">BTC</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mt-2 grid grid-cols-5 rounded-2xl border p-4">
-              <div className=" col-span-3">
-                <Label className="px-3 text-sm text-gray-600">
-                  {state.sellToken} / {state.buyToken} Rate
-                  <CustomInput
-                    className=" text-lg"
-                    value={state.rate}
-                    placeholder="0"
-                    readOnly
-                    type="text"
-                  />
-                </Label>
+      <div className="flex h-full w-full flex-row items-center justify-center pt-16">
+        <div className="flex basis-1/2 flex-col items-center justify-center ">
+          <div className="flex basis-4/5 flex-row">
+            <Card className="flex basis-3/5 flex-col items-center border-0 p-4 shadow-none">
+              <div className="mb-2 flex flex-row items-center justify-center gap-2">
+                <h2 className="text-2xl font-bold">Set Limit Order</h2>
               </div>
 
-              <div className=" col-span-2">
+              <div className="flex flex-row items-center rounded-2xl border p-4">
                 <Label className="px-3 text-sm text-gray-600">
-                  Valid For Days
+                  Sell
                   <CustomInput
-                    value={state.validForDays}
+                    value={state.sellAmount}
                     onChange={(e) => {
                       setState({
                         ...state,
-                        validForDays: Number(e.target.value),
+                        sellAmount: Number(e.target.value),
                       });
                     }}
                     placeholder={"0"}
@@ -249,21 +141,138 @@ export default function LimitOrder() {
                     type="number"
                   />
                 </Label>
-              </div>
-            </div>
 
-            <Button
-              size={"lg"}
-              type="submit"
-              className="mt-6 w-full rounded-2xl"
-              onClick={() => {
-                wallet ?? onConnectWallet();
-                wallet && handleSubmit();
-              }}
-            >
-              {wallet ? "Place Order" : "Connect wallet"}
-            </Button>
-          </Card>
+                <Select
+                  value={state.sellToken}
+                  onValueChange={(value) => {
+                    setState({ ...state, sellToken: value });
+                  }}
+                >
+                  <SelectTrigger className=" w-60 rounded-2xl">
+                    <SelectValue placeholder="Select a token to swap" />
+                  </SelectTrigger>
+
+                  <SelectContent className=" items-center  rounded-2xl text-center">
+                    <SelectItem value="MINA">MINA</SelectItem>
+                    <SelectItem value="USDT">USDT</SelectItem>
+                    <SelectItem value="ETH">ETH</SelectItem>
+                    <SelectItem value="BTC">BTC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative my-2 w-96">
+                <Button
+                  variant={"outline"}
+                  className=" absolute bottom-0 left-0 right-0 top-0 mx-auto my-auto border-0  ring-1 ring-border ring-offset-4 hover:bg-card"
+                  size={"icon"}
+                  onClick={() => {
+                    const sell = state.sellToken;
+                    const buy = state.buyToken;
+
+                    setState({
+                      ...state,
+                      sellToken: buy,
+                      buyToken: sell,
+                    });
+                  }}
+                >
+                  <ArrowUpDown className="h-3 w-3 "></ArrowUpDown>
+                </Button>
+              </div>
+
+              <div className="flex flex-row items-center rounded-2xl border p-4">
+                <Label className="px-3 text-sm text-gray-600">
+                  For
+                  <CustomInput
+                    value={state.buyAmount}
+                    onChange={(e) => {
+                      setState({
+                        ...state,
+                        buyAmount: Number(e.target.value),
+                      });
+                    }}
+                    placeholder={"0"}
+                    pattern="^[0-9]*[.,]?[0-9]*$"
+                    minLength={1}
+                    maxLength={40}
+                    inputMode="decimal"
+                    type="number"
+                  />
+                </Label>
+
+                <Select
+                  value={state.buyToken}
+                  onValueChange={(value) => {
+                    setState({ ...state, buyToken: value });
+                  }}
+                >
+                  <SelectTrigger className=" w-60 rounded-2xl">
+                    <SelectValue placeholder="Select a token to swap" />
+                  </SelectTrigger>
+
+                  <SelectContent className=" items-center  rounded-2xl text-center">
+                    <SelectItem value="MINA">MINA</SelectItem>
+                    <SelectItem value="USDT">USDT</SelectItem>
+                    <SelectItem value="ETH">ETH</SelectItem>
+                    <SelectItem value="BTC">BTC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-4 grid grid-cols-5 rounded-2xl border p-4">
+                <div className=" col-span-3">
+                  <Label className="px-3 text-sm text-gray-600">
+                    {state.sellToken} / {state.buyToken} Rate
+                    <CustomInput
+                      className=" text-xl"
+                      value={state.rate}
+                      placeholder="0"
+                      readOnly
+                      type="text"
+                    />
+                  </Label>
+                </div>
+
+                <div className=" col-span-2">
+                  <Label className="px-3 text-sm text-gray-600">
+                    Valid For Days
+                    <CustomInput
+                      value={state.validForDays}
+                      onChange={(e) => {
+                        setState({
+                          ...state,
+                          validForDays: Number(e.target.value),
+                        });
+                      }}
+                      placeholder={"0"}
+                      pattern="^[0-9]*[.,]?[0-9]*$"
+                      minLength={1}
+                      maxLength={40}
+                      inputMode="decimal"
+                      type="number"
+                    />
+                  </Label>
+                </div>
+              </div>
+
+              <Button
+                size={"lg"}
+                type="submit"
+                className="mt-6 w-full rounded-2xl"
+                onClick={() => {
+                  wallet ?? onConnectWallet();
+                  wallet && handleSubmit();
+                }}
+              >
+                {wallet ? "Place Order" : "Connect wallet"}
+              </Button>
+            </Card>
+            <div className="flex basis-2/5 flex-col gap-4">
+              <OrderBook />
+              <MyOrders />
+            </div>
+          </div>
         </div>
       </div>
     </div>
