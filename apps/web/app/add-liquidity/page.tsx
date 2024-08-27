@@ -183,7 +183,7 @@ export default function AddLiq() {
                           (Number(position.lpTokenAmount) /
                             Number(pool.lpTokenSupply)) *
                           100
-                        ).toPrecision(2)
+                        ).toPrecision(3)
                       : 0
                   } %`}</p>
                   <p className=" text-sm text-gray-600">Share of pool</p>
