@@ -1,6 +1,6 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableRow } from "./ui/table";
-import { useLimitStore } from "@/lib/stores/limitStore";
+import { LimitOrder, useLimitStore } from "@/lib/stores/limitStore";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { usePoolStore } from "@/lib/stores/poolStore";
 import { useChainStore } from "@/lib/stores/chain";
@@ -8,12 +8,33 @@ import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useClientStore } from "@/lib/stores/client";
+import { Field, PublicKey } from "o1js";
 
 export default function MyOrders() {
   const walletStore = useWalletStore();
   const limitStore = useLimitStore();
   const poolStore = usePoolStore();
   const chainStore = useChainStore();
+  const client = useClientStore();
+
+  const cancelOrder = async (order: LimitOrder) => {
+    if (client.client && walletStore.wallet) {
+      const limitOrderModule = client.client.runtime.resolve("LimitOrders");
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(walletStore.wallet),
+        async () => {
+          await limitOrderModule.cancelLimitOrder(Field.from(order.orderId));
+        },
+      );
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
+  };
   return (
     <Card className="flex flex-1 basis-1/2 flex-col rounded-2xl">
       <CardHeader className="pb-2">
@@ -62,6 +83,9 @@ export default function MyOrders() {
                         <Button
                           variant={"hover"}
                           className=" flex items-center justify-center text-sm"
+                          onClick={() => {
+                            cancelOrder(limitOrder);
+                          }}
                         >
                           Cancel <X className=" h-4 w-4" />
                         </Button>
