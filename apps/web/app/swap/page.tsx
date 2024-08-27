@@ -19,6 +19,8 @@ import { useClientStore } from "@/lib/stores/client";
 import { Balance, TokenId } from "@proto-kit/library";
 import { useToast } from "@/components/ui/use-toast";
 import { Poseidon, PublicKey } from "o1js";
+import { useLimitStore } from "@/lib/stores/limitStore";
+import { useChainStore } from "@/lib/stores/chain";
 
 export default function Swap() {
   const walletStore = useWalletStore();
@@ -37,6 +39,8 @@ export default function Swap() {
   const hasMounted = useHasMounted();
   const client = useClientStore();
   const { toast } = useToast();
+  const limitStore = useLimitStore();
+  const chainStore = useChainStore();
 
   useEffect(() => {
     let sellToken = poolStore.tokenList.find(
@@ -81,6 +85,34 @@ export default function Swap() {
         const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
         const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
         const amountOut = poolBuyTokenReserve - numerator / denominator;
+
+        const price = (amountOut / sellAmount).toPrecision(4);
+        console.log(price);
+
+        const limitOrders = limitStore.limitOrders
+          .filter((order) => {
+            return (
+              order.isActive &&
+              Number(order.expiration) >
+                Number(chainStore.block?.height ?? 0) &&
+              order.tokenIn === buyToken?.tokenId &&
+              order.tokenOut === sellToken?.tokenId &&
+              amountOut / sellAmount >=
+                Number(order.tokenOutAmount) / Number(order.tokenInAmount)
+            );
+          })
+          .map((order) => {
+            return {
+              price: Number(order.tokenOutAmount) / Number(order.tokenInAmount),
+              amount: Number(order.tokenInAmount),
+              orderId: order.orderId,
+              tokenIn: order.tokenIn,
+              tokenOut: order.tokenOut,
+            };
+          })
+          .sort((a, b) => a.price - b.price);
+
+        console.log(limitOrders);
 
         const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
         setState({
