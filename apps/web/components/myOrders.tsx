@@ -65,17 +65,25 @@ export default function MyOrders() {
                       className=" flex flex-row items-center justify-between"
                       key={limitOrder.orderId}
                     >
-                      <TableCell className="flex flex-col px-1 py-4 font-bold">
+                      <TableCell className="flex flex-col px-1 py-4">
                         <div>
-                          <span className=" font-medium">Sell</span>{" "}
+                          <span className=" font-medium text-red-600">
+                            Sell
+                          </span>{" "}
                           {limitOrder.tokenInAmount} {tokenIn?.name}{" "}
                         </div>
                         <div>
-                          <span className=" font-medium">For</span>{" "}
+                          <span className=" font-medium text-green-600">
+                            For
+                          </span>{" "}
                           {limitOrder.tokenOutAmount} {tokenOut?.name}
                         </div>
                         <div className=" text-sm">
-                          Valid until :{limitOrder.expiration}
+                          <span className=" text-sm font-normal">
+                            {" "}
+                            Valid until:{" "}
+                          </span>
+                          {limitOrder.expiration}
                         </div>
                       </TableCell>
 
