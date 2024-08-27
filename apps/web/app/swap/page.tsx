@@ -13,12 +13,12 @@ import {
 import { useWalletStore } from "@/lib/stores/wallet";
 import { ArrowUpDown, Route } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Pool, Token, usePoolStore } from "@/lib/stores/poolStore";
+import { OrderBundle, Pool, Token, usePoolStore } from "@/lib/stores/poolStore";
 import useHasMounted from "@/lib/customHooks";
 import { useClientStore } from "@/lib/stores/client";
 import { Balance, TokenId } from "@proto-kit/library";
 import { useToast } from "@/components/ui/use-toast";
-import { Poseidon, PublicKey } from "o1js";
+import { Field, Poseidon, PublicKey } from "o1js";
 import { useLimitStore } from "@/lib/stores/limitStore";
 import { useChainStore } from "@/lib/stores/chain";
 
@@ -39,10 +39,12 @@ export default function Swap() {
     execute: boolean;
     ordersToFill: null | any[];
     bestAmountOut: number;
+    newPriceImpact: number;
   }>({
     execute: false,
     ordersToFill: [],
     bestAmountOut: 0,
+    newPriceImpact: 0,
   });
   const poolStore = usePoolStore();
   const hasMounted = useHasMounted();
@@ -119,6 +121,7 @@ export default function Swap() {
     let remainingAmountOut = sellAmount;
     let totalAmountIn = 0;
 
+    // TODO: Implement a better algorithm like knapsack
     for (let i = 0; i < Math.min(limitOrders.length, 10); i++) {
       const order = limitOrders[i];
       if (order.amountOut <= remainingAmountOut) {
@@ -142,10 +145,16 @@ export default function Swap() {
     }
 
     console.log("fills", ordersToFill);
+    const { priceImpact } = calculateSwap(
+      poolBuyTokenReserve,
+      poolSellTokenReserve,
+      remainingAmountOut,
+    );
 
     return {
       ordersToFill,
       bestAmountOut,
+      newPriceImpact: priceImpact,
     };
   };
 
@@ -187,14 +196,6 @@ export default function Swap() {
         });
         return;
       } else {
-        // const amountInWithFee = sellAmount * 997;
-
-        // const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
-        // const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
-        // const amountOut = poolBuyTokenReserve - numerator / denominator;
-
-        // const price = (amountOut / sellAmount).toPrecision(4);
-        // const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
         const sellAmount = Number(state.sellAmount);
         const { amountOut, price, priceImpact } = calculateSwap(
           poolBuyTokenReserve,
@@ -202,20 +203,29 @@ export default function Swap() {
           sellAmount,
         );
         console.log(price);
-        const { ordersToFill, bestAmountOut } = calculateWithLimitOrders(
-          buyToken!,
-          sellToken!,
-          amountOut,
-          sellAmount,
-          poolBuyTokenReserve,
-          poolSellTokenReserve,
-        );
+        const { ordersToFill, bestAmountOut, newPriceImpact } =
+          calculateWithLimitOrders(
+            buyToken!,
+            sellToken!,
+            amountOut,
+            sellAmount,
+            poolBuyTokenReserve,
+            poolSellTokenReserve,
+          );
 
         if (bestAmountOut > amountOut) {
           setlimitState({
             execute: true,
             ordersToFill,
-            bestAmountOut,
+            bestAmountOut: Number(bestAmountOut.toPrecision(4)),
+            newPriceImpact: Number(newPriceImpact.toPrecision(2)),
+          });
+        } else {
+          setlimitState({
+            execute: false,
+            ordersToFill: [],
+            bestAmountOut: 0,
+            newPriceImpact: 0,
           });
         }
 
@@ -255,29 +265,73 @@ export default function Swap() {
     if (!pool || !sellToken || !buyToken || !wallet || !client.client) {
       return;
     }
-
-    const tokenIn = TokenId.from(sellToken?.tokenId);
-    const tokenOut = TokenId.from(buyToken?.tokenId);
-    const amountIn = Balance.from(state.sellAmount);
-    const amountOut = Balance.from(Math.floor(state.buyAmount));
-
-    console.log(amountIn.toString(), amountOut.toString());
-    console.log(Poseidon.hash([tokenIn, tokenOut]));
-
     const poolModule = client.client.runtime.resolve("PoolModule");
+    if (limitState.execute) {
+      const tokenIn = TokenId.from(sellToken?.tokenId);
+      const tokenOut = TokenId.from(buyToken?.tokenId);
+      const amountIn = Balance.from(state.sellAmount);
+      const amountOut = Balance.from(Math.floor(limitState.bestAmountOut));
+      const orderbundle = OrderBundle.empty();
 
-    const tx = await client.client.transaction(
-      PublicKey.fromBase58(wallet),
-      async () => {
-        await poolModule.rawSwap(tokenIn, tokenOut, amountIn, amountOut);
-      },
-    );
+      console.log("tokenIn", tokenIn.toString());
+      console.log("tokenOut", tokenOut.toString());
+      console.log("amountIn", amountIn.toString());
+      console.log("amountOut", amountOut.toString());
+      console.log("ordersToFill", limitState.ordersToFill);
 
-    await tx.sign();
-    await tx.send();
+      for (
+        let i = 0;
+        limitState.ordersToFill && i < limitState.ordersToFill.length;
+        i++
+      ) {
+        orderbundle.bundle[i] = Field.from(limitState.ordersToFill[i].orderId);
+      }
+      console.log(amountIn.toString(), amountOut.toString());
+      console.log(Poseidon.hash([tokenIn, tokenOut]));
 
-    //@ts-ignore
-    walletStore.addPendingTransaction(tx.transaction);
+      for (let i = 0; i < 10; i++) {
+        console.log(orderbundle.bundle[i].toString());
+      }
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.swapWithLimit(
+            tokenIn,
+            tokenOut,
+            amountIn,
+            amountOut,
+            orderbundle,
+          );
+        },
+      );
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    } else {
+      const tokenIn = TokenId.from(sellToken?.tokenId);
+      const tokenOut = TokenId.from(buyToken?.tokenId);
+      const amountIn = Balance.from(state.sellAmount);
+      const amountOut = Balance.from(Math.floor(state.buyAmount));
+
+      console.log(amountIn.toString(), amountOut.toString());
+      console.log(Poseidon.hash([tokenIn, tokenOut]));
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.rawSwap(tokenIn, tokenOut, amountIn, amountOut);
+        },
+      );
+
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
   };
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
@@ -357,7 +411,19 @@ export default function Swap() {
                   inputMode="decimal"
                   type="number"
                 />
+                {limitState.execute ? (
+                  <p className=" text-xl">
+                    <span className=" text-xs">With LimitSwap:</span>{" "}
+                    {limitState.bestAmountOut}
+                  </p>
+                ) : null}
                 <p>Price Impact: {state.priceImpact} %</p>
+                {limitState.execute ? (
+                  <p>
+                    <span className=" text-xs">With LimitSwap:</span>{" "}
+                    {limitState.newPriceImpact}
+                  </p>
+                ) : null}
               </Label>
 
               <Select

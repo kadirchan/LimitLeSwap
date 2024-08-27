@@ -275,19 +275,44 @@ export class PoolModule extends RuntimeModule<{}> {
             assert(limitOrderId.greaterThanOrEqual(Field.from(0)), "Invalid limit order id");
             const order = (await this.limitOrders.orders.get(limitOrderId)).value;
             let isActive = order.isActive.and(
-                order.expiration.lessThanOrEqual(this.network.block.height)
+                order.expiration.greaterThanOrEqual(this.network.block.height)
             );
-            assert(order.tokenOut.equals(tokenIn), "Invalid token out");
-            assert(order.tokenIn.equals(tokenOut), "Invalid token in");
+            Provable.asProver(() => {
+                console.log("order", limitOrderId.toString());
+                console.log("isActive", isActive.toBoolean());
+                // console.log("tokenin", tokenIn);
+                // console.log("res", order.tokenOut.equals(tokenIn).toBoolean());
+            });
+            assert(order.tokenOut.equals(tokenIn).or(isActive.not()), "Invalid token out");
+            assert(order.tokenIn.equals(tokenOut).or(isActive.not()), "Invalid token in");
+
+            Provable.asProver(() => {
+                console.log("orderTokenOutAmount", order.tokenOutAmount.toString());
+                console.log(
+                    "orderTokenOutAmount",
+                    UInt64.Unsafe.fromField(order.tokenOutAmount).toString()
+                );
+                console.log("orderTokenInAmount", order.tokenInAmount.toString());
+                console.log(
+                    "orderTokenInAmount",
+                    UInt64.Unsafe.fromField(order.tokenInAmount).toString()
+                );
+            });
 
             const amountToFill = UInt64.Unsafe.fromField(
-                Provable.if(isActive, order.tokenOut, Field.from(0))
+                Provable.if(isActive, order.tokenOutAmount, Field.from(0))
             );
-            const amountToFillIn = UInt64.Unsafe.fromField(
-                Provable.if(isActive, order.tokenIn, Field.from(0))
+            const amountToTake = UInt64.Unsafe.fromField(
+                Provable.if(isActive, order.tokenInAmount, Field.from(0))
             );
-            remainingAmountIn = Balance.from(remainingAmountIn.sub(amountToFillIn));
-            limitOrderFills = Balance.from(limitOrderFills.add(amountToFill));
+            remainingAmountIn = Balance.from(remainingAmountIn.sub(amountToFill));
+            limitOrderFills = Balance.from(limitOrderFills.add(amountToTake));
+            Provable.asProver(() => {
+                console.log("amountToFill", amountToFill.toString());
+                console.log("amountToTake", amountToTake.toString());
+                console.log("remainingAmountIn", remainingAmountIn.toString());
+                console.log("limitOrderFills", limitOrderFills.toString());
+            });
             await this.balances.transfer(
                 tokenIn,
                 this.transaction.sender.value,
@@ -298,12 +323,16 @@ export class PoolModule extends RuntimeModule<{}> {
                 tokenOut,
                 order.owner,
                 this.transaction.sender.value,
-                Balance.from(amountToFillIn)
+                Balance.from(amountToTake)
             );
             order.isActive = Bool(false);
             await this.limitOrders.orders.set(limitOrderId, order);
         }
         const remainingAmountOut = amountOut.sub(limitOrderFills);
+        Provable.asProver(() => {
+            console.log("final remainingAmountIn", remainingAmountIn.toString());
+            console.log("final remainingAmountOut", remainingAmountOut.toString());
+        });
         await this.rawSwap(tokenIn, tokenOut, remainingAmountIn, remainingAmountOut);
     }
 }

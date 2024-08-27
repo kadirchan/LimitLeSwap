@@ -1,5 +1,16 @@
+import { Field, Provable, Struct } from "o1js";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+
+const ORDER_BUNDLE = 10;
+export class OrderBundle extends Struct({
+  bundle: Provable.Array(Field, ORDER_BUNDLE),
+}) {
+  public static empty(): OrderBundle {
+    const bundle = Array<Field>(10).fill(Field.from(0));
+    return new OrderBundle({ bundle });
+  }
+}
 
 export interface Token {
   name: string;
