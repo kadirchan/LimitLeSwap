@@ -13,7 +13,7 @@ import {
 import { useWalletStore } from "@/lib/stores/wallet";
 import { ArrowUpDown, Route } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Pool, usePoolStore } from "@/lib/stores/poolStore";
+import { Pool, Token, usePoolStore } from "@/lib/stores/poolStore";
 import useHasMounted from "@/lib/customHooks";
 import { useClientStore } from "@/lib/stores/client";
 import { Balance, TokenId } from "@proto-kit/library";
@@ -35,12 +35,119 @@ export default function Swap() {
   });
 
   const [pool, setPool] = useState<Pool | null>(null);
+  const [limitState, setlimitState] = useState<{
+    execute: boolean;
+    ordersToFill: null | any[];
+    bestAmountOut: number;
+  }>({
+    execute: false,
+    ordersToFill: [],
+    bestAmountOut: 0,
+  });
   const poolStore = usePoolStore();
   const hasMounted = useHasMounted();
   const client = useClientStore();
   const { toast } = useToast();
   const limitStore = useLimitStore();
   const chainStore = useChainStore();
+
+  const calculateSwap = (
+    poolBuyTokenReserve: number,
+    poolSellTokenReserve: number,
+    sellAmount: number,
+  ) => {
+    const amountInWithFee = sellAmount * 997;
+
+    const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
+    const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
+    const amountOut = poolBuyTokenReserve - numerator / denominator;
+
+    const price = (amountOut / sellAmount).toPrecision(4);
+    const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
+
+    return {
+      amountOut,
+      price,
+      priceImpact,
+    };
+  };
+
+  const calculateWithLimitOrders = (
+    buyToken: Token,
+    sellToken: Token,
+    amountOut: number,
+    sellAmount: number,
+    poolBuyTokenReserve: number,
+    poolSellTokenReserve: number,
+  ) => {
+    const limitOrders = limitStore.limitOrders
+      .filter((order) => {
+        return (
+          order.isActive &&
+          Number(order.expiration) > Number(chainStore.block?.height ?? 0) &&
+          order.tokenIn === buyToken?.tokenId &&
+          order.tokenOut === sellToken?.tokenId &&
+          amountOut / sellAmount <=
+            Number(order.tokenInAmount) / Number(order.tokenOutAmount)
+        );
+      })
+      .map((order) => {
+        return {
+          price: Number(order.tokenInAmount) / Number(order.tokenOutAmount),
+          amountIn: Number(order.tokenInAmount),
+          amountOut: Number(order.tokenOutAmount),
+          orderId: order.orderId,
+          tokenIn: order.tokenIn,
+          tokenOut: order.tokenOut,
+        };
+      })
+      .sort((a, b) => -(a.price - b.price));
+
+    console.log(limitOrders);
+
+    const { amountOut: amountOutWithoutLimitOrders } = calculateSwap(
+      poolBuyTokenReserve,
+      poolSellTokenReserve,
+      sellAmount,
+    );
+
+    console.log("amountOutWithoutLimitOrders", amountOutWithoutLimitOrders);
+
+    let bestAmountOut = amountOutWithoutLimitOrders;
+
+    const ordersToFill: any[] = [];
+    let remainingAmountOut = sellAmount;
+    let totalAmountIn = 0;
+
+    for (let i = 0; i < Math.min(limitOrders.length, 10); i++) {
+      const order = limitOrders[i];
+      if (order.amountOut <= remainingAmountOut) {
+        const { amountOut } = calculateSwap(
+          poolBuyTokenReserve,
+          poolSellTokenReserve,
+          remainingAmountOut - order.amountOut,
+        );
+        console.log(amountOut, order.amountIn, totalAmountIn);
+        console.log(
+          "amountOut + order.amountIn + totalAmountIn",
+          amountOut + order.amountIn + totalAmountIn,
+        );
+        if (amountOut + order.amountIn + totalAmountIn > bestAmountOut) {
+          ordersToFill.push(order);
+          totalAmountIn += order.amountIn;
+          remainingAmountOut -= order.amountOut;
+          bestAmountOut = amountOut + totalAmountIn;
+        }
+      }
+    }
+
+    console.log("fills", ordersToFill);
+
+    return {
+      ordersToFill,
+      bestAmountOut,
+    };
+  };
 
   useEffect(() => {
     let sellToken = poolStore.tokenList.find(
@@ -80,44 +187,41 @@ export default function Swap() {
         });
         return;
       } else {
-        const amountInWithFee = sellAmount * 997;
+        // const amountInWithFee = sellAmount * 997;
 
-        const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
-        const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
-        const amountOut = poolBuyTokenReserve - numerator / denominator;
+        // const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
+        // const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
+        // const amountOut = poolBuyTokenReserve - numerator / denominator;
 
-        const price = (amountOut / sellAmount).toPrecision(4);
+        // const price = (amountOut / sellAmount).toPrecision(4);
+        // const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
+        const sellAmount = Number(state.sellAmount);
+        const { amountOut, price, priceImpact } = calculateSwap(
+          poolBuyTokenReserve,
+          poolSellTokenReserve,
+          sellAmount,
+        );
         console.log(price);
+        const { ordersToFill, bestAmountOut } = calculateWithLimitOrders(
+          buyToken!,
+          sellToken!,
+          amountOut,
+          sellAmount,
+          poolBuyTokenReserve,
+          poolSellTokenReserve,
+        );
 
-        const limitOrders = limitStore.limitOrders
-          .filter((order) => {
-            return (
-              order.isActive &&
-              Number(order.expiration) >
-                Number(chainStore.block?.height ?? 0) &&
-              order.tokenIn === buyToken?.tokenId &&
-              order.tokenOut === sellToken?.tokenId &&
-              amountOut / sellAmount >=
-                Number(order.tokenOutAmount) / Number(order.tokenInAmount)
-            );
-          })
-          .map((order) => {
-            return {
-              price: Number(order.tokenOutAmount) / Number(order.tokenInAmount),
-              amount: Number(order.tokenInAmount),
-              orderId: order.orderId,
-              tokenIn: order.tokenIn,
-              tokenOut: order.tokenOut,
-            };
-          })
-          .sort((a, b) => a.price - b.price);
+        if (bestAmountOut > amountOut) {
+          setlimitState({
+            execute: true,
+            ordersToFill,
+            bestAmountOut,
+          });
+        }
 
-        console.log(limitOrders);
-
-        const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
         setState({
           ...state,
-          buyAmount: amountOut,
+          buyAmount: Number(amountOut.toPrecision(4)),
           priceImpact: priceImpact.toPrecision(2),
         });
       }
