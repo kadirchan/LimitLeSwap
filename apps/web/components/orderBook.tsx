@@ -84,74 +84,79 @@ export default function OrderBook({
         amount: priceToAmount[Number(key)],
       };
     });
-    console.log(transformedArray);
+
     setOrders(transformedArray);
-    console.log(orders);
   }, [tokenIn, tokenOut, limitStore.limitOrders]);
   return (
-    <Card className=" basis-1/2 rounded-2xl">
+    <Card className=" w-full rounded-2xl shadow-none">
       <CardHeader>
         <CardTitle className="text-xl">
           {pair.tokenIn} / {pair.tokenOut} Orders
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart
-            accessibilityLayer
-            data={orders}
-            layout="vertical"
-            margin={{
-              right: 16,
-            }}
-          >
-            <CartesianGrid horizontal={false} />
-            <YAxis
-              dataKey="price"
-              type="category"
-              tickLine={false}
-              tickMargin={1}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
-            />
-            <XAxis dataKey="amount" type="number" hide />
-            <ChartTooltip
-              cursor={true}
-              content={
-                <ChartTooltipContent
-                  indicator="dot"
-                  labelFormatter={(value) =>
-                    value + ` ${pair.tokenIn} / ${pair.tokenOut}`
-                  }
-                  formatter={(value) => value + ` ${pair.tokenIn}`}
-                  hideIndicator={false}
-                />
-              }
-            />
-            <Bar
-              dataKey="amount"
+        {orders.length > 0 ? (
+          <ChartContainer config={chartConfig}>
+            <BarChart
+              accessibilityLayer
+              data={orders}
               layout="vertical"
-              fill="hsl(142.1 76.2% 36.3%)"
-              radius={4}
+              margin={{
+                right: 16,
+              }}
             >
-              <LabelList
+              <CartesianGrid horizontal={false} />
+              <YAxis
                 dataKey="price"
-                position="insideLeft"
-                offset={2}
-                className="fill-[--color-label]"
-                fontSize={10}
+                type="category"
+                tickLine={false}
+                tickMargin={1}
+                axisLine={false}
+                tickFormatter={(value) => value.slice(0, 3)}
+                hide
               />
-              <LabelList
+              <XAxis dataKey="amount" type="number" hide />
+              <ChartTooltip
+                cursor={true}
+                content={
+                  <ChartTooltipContent
+                    indicator="dot"
+                    labelFormatter={(value) =>
+                      value + ` ${pair.tokenIn} / ${pair.tokenOut}`
+                    }
+                    formatter={(value) => value + ` ${pair.tokenIn}`}
+                    hideIndicator={false}
+                  />
+                }
+              />
+              <Bar
                 dataKey="amount"
-                position="right"
-                offset={4}
-                className="overflow-visible fill-foreground"
-                fontSize={10}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+                layout="vertical"
+                fill="hsl(142.1 76.2% 36.3%)"
+                radius={4}
+              >
+                <LabelList
+                  dataKey="price"
+                  position="insideLeft"
+                  offset={2}
+                  className="fill-[--color-label]"
+                  fontSize={10}
+                />
+                <LabelList
+                  dataKey="amount"
+                  position="right"
+                  offset={4}
+                  className="overflow-visible fill-foreground"
+                  fontSize={10}
+                />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex h-40 items-center justify-center">
+            <p className="text-sm text-zinc-500">No orders available</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

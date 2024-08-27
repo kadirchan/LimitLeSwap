@@ -36,7 +36,7 @@ export default function MyOrders() {
     }
   };
   return (
-    <Card className="flex flex-1 basis-1/2 flex-col rounded-2xl">
+    <Card className="flex w-full flex-col rounded-2xl shadow-none">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl">My Orders</CardTitle>
       </CardHeader>
