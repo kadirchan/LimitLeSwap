@@ -118,7 +118,7 @@ export default function LimitOrder() {
         <div className="flex basis-1/2 flex-col items-center justify-center ">
           <div className="flex basis-4/5 flex-col gap-4">
             <div className=" flex basis-1/2 flex-row gap-4">
-              <div className=" flex basis-3/5 flex-col">
+              <div className=" flex basis-3/5 flex-col  items-center">
                 <div className="mb-2 flex flex-row items-center justify-center gap-2">
                   <h2 className="text-2xl font-bold">Set Limit Order</h2>
                 </div>
