@@ -269,7 +269,7 @@ export default function LimitOrder() {
               </Button>
             </Card>
             <div className="flex basis-2/5 flex-col gap-4">
-              <OrderBook />
+              <OrderBook tokenIn={state.sellToken} tokenOut={state.buyToken} />
               <MyOrders />
             </div>
           </div>

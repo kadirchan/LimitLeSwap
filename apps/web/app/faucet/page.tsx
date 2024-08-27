@@ -42,7 +42,7 @@ export default function Faucet() {
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
         <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Card className="w-full p-4">
+          <Card className="w-full rounded-2xl p-4">
             <div className="mb-2">
               <h2 className="text-xl font-bold">Token Faucet</h2>
               <p className="mt-1 text-sm text-zinc-500">
