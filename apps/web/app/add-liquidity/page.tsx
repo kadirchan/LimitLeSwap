@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { DECIMALS } from "@/lib/constants";
 import useHasMounted from "@/lib/customHooks";
 import { useBalancesStore } from "@/lib/stores/balances";
 import { useClientStore } from "@/lib/stores/client";
@@ -29,7 +30,6 @@ export default function AddLiq() {
   const balanceStore = useBalancesStore();
   const client = useClientStore();
   const { toast } = useToast();
-
   const calculateQuote = (
     tokenAReserve: number,
     tokenBReserve: number,
@@ -46,6 +46,7 @@ export default function AddLiq() {
     tokenA: "MINA",
     tokenB: "USDT",
     lpRequested: 0,
+    emptyPool: false,
   });
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function AddLiq() {
         return pos.poolId.toString() === pool.poolId.toString();
       });
 
+      console.log(pool, pos);
       setPosition(pos ?? null);
     }
   }, [state.tokenA, state.tokenB, hasMounted, poolStore.poolList]);
@@ -91,9 +93,29 @@ export default function AddLiq() {
 
       const tokenA = TokenId.from(tokenAid?.tokenId);
       const tokenB = TokenId.from(tokenBid?.tokenId);
-      const tokenAmountA = Balance.from(state.tokenAmountA);
-      const tokenAmountB = Balance.from(state.tokenAmountB);
-      const lpAmount = Balance.from(state.lpRequested);
+      const tokenAmountA = Balance.from(
+        BigInt(state.tokenAmountA * Number(DECIMALS)),
+      );
+      const tokenAmountB = Balance.from(
+        BigInt(state.tokenAmountB * Number(DECIMALS)),
+      );
+      const lpAmount = Balance.from(
+        BigInt(Math.floor(state.lpRequested * Number(DECIMALS))),
+      );
+
+      console.log("Adding liquidity");
+
+      console.log(state.tokenA, tokenAmountA.toString());
+      console.log(state.tokenB, tokenAmountB.toString());
+      console.log(
+        tokenAmountA.mul(Balance.from(pool.token0Amount)).toString(),
+        pool.token0.name,
+      );
+      console.log(
+        tokenAmountB.mul(Balance.from(pool.token1Amount)).toString(),
+        pool.token1.name,
+      );
+      console.log(lpAmount.toString());
 
       const tx = await client.client.transaction(
         PublicKey.fromBase58(wallet),
@@ -112,6 +134,46 @@ export default function AddLiq() {
 
       //@ts-ignore
       walletStore.addPendingTransaction(tx.transaction);
+    }
+  };
+
+  const handleEmptyPool = async () => {
+    let tokenA = poolStore.tokenList.find(
+      (token) => token.name === state.tokenA,
+    );
+    let tokenB = poolStore.tokenList.find(
+      (token) => token.name === state.tokenB,
+    );
+    if (state.tokenAmountA <= 0 || state.tokenAmountB <= 0) {
+      toast({
+        title: "Invalid token amount",
+        description: "Please enter a valid token amount",
+      });
+      return;
+    }
+    if (client.client && wallet && tokenA && tokenB) {
+      const TokenIdA = TokenId.from(tokenA.tokenId);
+      const TokenIdB = TokenId.from(tokenB.tokenId);
+      const TokenAmountA = Balance.from(
+        BigInt(state.tokenAmountA * Number(DECIMALS)),
+      );
+      const TokenAmountB = Balance.from(
+        BigInt(state.tokenAmountB * Number(DECIMALS)),
+      );
+      const lpRequested = Balance.from(
+        BigInt(
+          Math.floor(
+            Math.sqrt(state.tokenAmountA * state.tokenAmountB) *
+              Number(DECIMALS),
+          ),
+        ),
+      );
+
+      console.log(lpRequested.mul(lpRequested).toString());
+      console.log(TokenAmountA.mul(TokenAmountB).toString());
+
+      // TODO: Implement addLiquidityEmptyPool
+      console.log("Not implemented yet");
     }
   };
   return (
@@ -137,16 +199,20 @@ export default function AddLiq() {
                     pool?.token0.name === state.tokenA
                       ? Number(pool?.token1Amount)
                       : Number(pool?.token0Amount);
-                  const tokenAmountB = calculateQuote(
-                    tokenAReserve,
-                    tokenBReserve,
-                    tokenAmountA,
-                  );
-                  if (Number.isInteger(tokenAmountB)) {
-                    const lpRequested = Math.floor(
-                      Math.sqrt(tokenAmountA * tokenAmountB),
+                  if (
+                    tokenAReserve &&
+                    tokenBReserve &&
+                    tokenAReserve > 0 &&
+                    tokenBReserve > 0
+                  ) {
+                    const tokenAmountB = calculateQuote(
+                      tokenAReserve,
+                      tokenBReserve,
+                      tokenAmountA,
                     );
-                    setWarning(false);
+
+                    const lpRequested = Math.sqrt(tokenAmountA * tokenAmountB);
+
                     setState({
                       ...state,
                       tokenAmountA: tokenAmountA,
@@ -154,12 +220,10 @@ export default function AddLiq() {
                       lpRequested: lpRequested,
                     });
                   } else {
-                    setWarning(true);
                     setState({
                       ...state,
                       tokenAmountA: tokenAmountA,
-                      tokenAmountB: Number(tokenAmountB.toFixed(1)),
-                      lpRequested: 0,
+                      emptyPool: true,
                     });
                   }
                 }}
@@ -213,16 +277,19 @@ export default function AddLiq() {
                     pool?.token0.name === state.tokenB
                       ? Number(pool?.token1Amount)
                       : Number(pool?.token0Amount);
-                  const tokenAmountA = calculateQuote(
-                    tokenAReserve,
-                    tokenBReserve,
-                    tokenAmountB,
-                  );
-                  if (Number.isInteger(tokenAmountA)) {
-                    const lpRequested = Math.floor(
-                      Math.sqrt(tokenAmountA * tokenAmountB),
+                  if (
+                    tokenAReserve &&
+                    tokenBReserve &&
+                    tokenAReserve > 0 &&
+                    tokenBReserve > 0
+                  ) {
+                    const tokenAmountA = calculateQuote(
+                      tokenAReserve,
+                      tokenBReserve,
+                      tokenAmountB,
                     );
-                    setWarning(false);
+                    const lpRequested = Math.sqrt(tokenAmountA * tokenAmountB);
+
                     setState({
                       ...state,
                       tokenAmountA: tokenAmountA,
@@ -230,12 +297,10 @@ export default function AddLiq() {
                       lpRequested: lpRequested,
                     });
                   } else {
-                    setWarning(true);
                     setState({
                       ...state,
-                      tokenAmountA: Number(tokenAmountA.toFixed(1)),
                       tokenAmountB: tokenAmountB,
-                      lpRequested: 0,
+                      emptyPool: true,
                     });
                   }
                 }}
@@ -287,7 +352,7 @@ export default function AddLiq() {
                       ? (
                           Number(pool?.token0Amount) /
                           Number(pool?.token1Amount)
-                        ).toPrecision(2)
+                        ).toFixed(2)
                       : 0}
                   </p>
                   <p className=" text-sm text-gray-600">{`${state.tokenA} / ${state.tokenB}`}</p>
@@ -298,7 +363,7 @@ export default function AddLiq() {
                       ? (
                           Number(pool?.token1Amount) /
                           Number(pool?.token0Amount)
-                        ).toPrecision(2)
+                        ).toFixed(2)
                       : 0}
                   </p>
                   <p className=" text-sm text-gray-600">{`${state.tokenB} / ${state.tokenA}`}</p>
@@ -336,7 +401,8 @@ export default function AddLiq() {
               disabled={!wallet || !pool}
               onClick={() => {
                 wallet ?? onConnectWallet();
-                wallet && handleSubmit();
+                wallet && !state.emptyPool && handleSubmit();
+                wallet && state.emptyPool && handleEmptyPool();
               }}
             >
               {wallet
