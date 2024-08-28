@@ -117,6 +117,8 @@ export class PoolModule extends RuntimeModule<{}> {
         const reserveA = await this.balances.getBalance(tokenA, poolAccount);
         const reserveB = await this.balances.getBalance(tokenB, poolAccount);
 
+        assert(tokenAmountA.mul(reserveB).equals(tokenAmountB.mul(reserveA)), "Invalid ratio");
+
         const lpSquare = lpRequested.mul(lpRequested);
 
         assert(lpSquare.lessThanOrEqual(tokenAmountA.mul(tokenAmountB)), "Invalid LP token amount");
@@ -134,7 +136,14 @@ export class PoolModule extends RuntimeModule<{}> {
             tokenAmountB
         );
         await this.balances.mintToken(poolId, this.transaction.sender.value, lpRequested);
-        // Todo not checked properly
+
+        const updatedPool = Pool.from(
+            tokenA,
+            tokenB,
+            reserveA.add(tokenAmountA),
+            reserveB.add(tokenAmountB)
+        );
+        await this.pools.set(poolId, updatedPool);
     }
 
     @runtimeMethod()

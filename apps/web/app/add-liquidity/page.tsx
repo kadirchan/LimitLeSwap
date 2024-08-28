@@ -11,10 +11,13 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import useHasMounted from "@/lib/customHooks";
+import { useBalancesStore } from "@/lib/stores/balances";
 import { useClientStore } from "@/lib/stores/client";
 import { Pool, Position, usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
+import { Balance, TokenId } from "@proto-kit/library";
 import { ArrowDown, Droplets, Plus } from "lucide-react";
+import { PublicKey } from "o1js";
 import React, { useEffect, useState } from "react";
 
 export default function AddLiq() {
@@ -23,13 +26,18 @@ export default function AddLiq() {
   const onConnectWallet = walletStore.connectWallet;
   const poolStore = usePoolStore();
   const hasMounted = useHasMounted();
+  const balanceStore = useBalancesStore();
   const client = useClientStore();
   const { toast } = useToast();
 
-  const handleSubmit = () => {
-    console.log("submit");
+  const calculateQuote = (
+    tokenAReserve: number,
+    tokenBReserve: number,
+    tokenAAmount: number,
+  ) => {
+    return (tokenBReserve * tokenAAmount) / tokenAReserve;
   };
-
+  const [warning, setWarning] = useState(false);
   const [pool, setPool] = useState<Pool | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [state, setState] = useState({
@@ -37,7 +45,9 @@ export default function AddLiq() {
     tokenAmountB: 0,
     tokenA: "MINA",
     tokenB: "USDT",
+    lpRequested: 0,
   });
+
   useEffect(() => {
     let tokenA = poolStore.tokenList.find(
       (token) => token.name === state.tokenA,
@@ -61,6 +71,49 @@ export default function AddLiq() {
       setPosition(pos ?? null);
     }
   }, [state.tokenA, state.tokenB, hasMounted, poolStore.poolList]);
+  const handleSubmit = async () => {
+    let tokenAid = poolStore.tokenList.find(
+      (token) => token.name === state.tokenA,
+    );
+    let tokenBid = poolStore.tokenList.find(
+      (token) => token.name === state.tokenB,
+    );
+    if (
+      client.client &&
+      wallet &&
+      pool &&
+      state.lpRequested > 0 &&
+      !warning &&
+      tokenAid &&
+      tokenBid
+    ) {
+      const poolModule = client.client.runtime.resolve("PoolModule");
+
+      const tokenA = TokenId.from(tokenAid?.tokenId);
+      const tokenB = TokenId.from(tokenBid?.tokenId);
+      const tokenAmountA = Balance.from(state.tokenAmountA);
+      const tokenAmountB = Balance.from(state.tokenAmountB);
+      const lpAmount = Balance.from(state.lpRequested);
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.addLiquidity(
+            tokenA,
+            tokenB,
+            tokenAmountA,
+            tokenAmountB,
+            lpAmount,
+          );
+        },
+      );
+      await tx.sign();
+      await tx.send();
+
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
+    }
+  };
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
@@ -75,7 +128,40 @@ export default function AddLiq() {
               <CustomInput
                 value={state.tokenAmountA}
                 onChange={(e) => {
-                  setState({ ...state, tokenAmountA: Number(e.target.value) });
+                  const tokenAmountA = Number(e.target.value);
+                  const tokenAReserve =
+                    pool?.token0.name === state.tokenA
+                      ? Number(pool?.token0Amount)
+                      : Number(pool?.token1Amount);
+                  const tokenBReserve =
+                    pool?.token0.name === state.tokenA
+                      ? Number(pool?.token1Amount)
+                      : Number(pool?.token0Amount);
+                  const tokenAmountB = calculateQuote(
+                    tokenAReserve,
+                    tokenBReserve,
+                    tokenAmountA,
+                  );
+                  if (Number.isInteger(tokenAmountB)) {
+                    const lpRequested = Math.floor(
+                      Math.sqrt(tokenAmountA * tokenAmountB),
+                    );
+                    setWarning(false);
+                    setState({
+                      ...state,
+                      tokenAmountA: tokenAmountA,
+                      tokenAmountB: tokenAmountB,
+                      lpRequested: lpRequested,
+                    });
+                  } else {
+                    setWarning(true);
+                    setState({
+                      ...state,
+                      tokenAmountA: tokenAmountA,
+                      tokenAmountB: Number(tokenAmountB.toFixed(1)),
+                      lpRequested: 0,
+                    });
+                  }
                 }}
                 placeholder={"0"}
                 pattern="^[0-9]*[.,]?[0-9]*$"
@@ -118,7 +204,40 @@ export default function AddLiq() {
               <CustomInput
                 value={state.tokenAmountB}
                 onChange={(e) => {
-                  setState({ ...state, tokenAmountB: Number(e.target.value) });
+                  const tokenAmountB = Number(e.target.value);
+                  const tokenAReserve =
+                    pool?.token0.name === state.tokenB
+                      ? Number(pool?.token0Amount)
+                      : Number(pool?.token1Amount);
+                  const tokenBReserve =
+                    pool?.token0.name === state.tokenB
+                      ? Number(pool?.token1Amount)
+                      : Number(pool?.token0Amount);
+                  const tokenAmountA = calculateQuote(
+                    tokenAReserve,
+                    tokenBReserve,
+                    tokenAmountB,
+                  );
+                  if (Number.isInteger(tokenAmountA)) {
+                    const lpRequested = Math.floor(
+                      Math.sqrt(tokenAmountA * tokenAmountB),
+                    );
+                    setWarning(false);
+                    setState({
+                      ...state,
+                      tokenAmountA: tokenAmountA,
+                      tokenAmountB: tokenAmountB,
+                      lpRequested: lpRequested,
+                    });
+                  } else {
+                    setWarning(true);
+                    setState({
+                      ...state,
+                      tokenAmountA: Number(tokenAmountA.toFixed(1)),
+                      tokenAmountB: tokenAmountB,
+                      lpRequested: 0,
+                    });
+                  }
                 }}
                 placeholder={"0"}
                 pattern="^[0-9]*[.,]?[0-9]*$"
@@ -146,6 +265,12 @@ export default function AddLiq() {
                 </SelectContent>
               </Select>
             </div>
+
+            {warning ? (
+              <p className=" text-sm text-destructive">
+                Amounts should be integers
+              </p>
+            ) : null}
 
             <div className="my-2 flex w-96 items-center justify-center">
               <ArrowDown className="h-6 w-6" />
@@ -179,15 +304,26 @@ export default function AddLiq() {
                   <p className=" text-sm text-gray-600">{`${state.tokenB} / ${state.tokenA}`}</p>
                 </div>
                 <div className="col-span-1 flex flex-col items-center">
-                  <p>{`${
-                    pool && position
-                      ? (
-                          (Number(position.lpTokenAmount) /
-                            Number(pool.lpTokenSupply)) *
-                          100
-                        ).toPrecision(3)
-                      : 0
-                  } %`}</p>
+                  {state.lpRequested > 0 && pool ? (
+                    <p className=" text-green-600">
+                      {`${(
+                        (((position ? Number(position.lpTokenAmount) : 0) +
+                          state.lpRequested) /
+                          (Number(pool.lpTokenSupply) + state.lpRequested)) *
+                        100
+                      ).toFixed(1)} %`}
+                    </p>
+                  ) : (
+                    <p>{`${
+                      pool && position
+                        ? (
+                            (Number(position.lpTokenAmount) /
+                              Number(pool.lpTokenSupply)) *
+                            100
+                          ).toFixed(1)
+                        : 0
+                    } %`}</p>
+                  )}
                   <p className=" text-sm text-gray-600">Share of pool</p>
                 </div>
               </div>
