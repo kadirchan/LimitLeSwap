@@ -366,6 +366,7 @@ export default function Swap() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
+                  <img src={`/${state.sellToken}.png`} className=" h-4 w-4" />
                   <SelectValue placeholder="Select a token to swap" />
                 </SelectTrigger>
 
@@ -433,6 +434,7 @@ export default function Swap() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
+                  <img src={`/${state.buyToken}.png`} className=" h-4 w-4" />
                   <SelectValue placeholder="Select a token to swap" />
                 </SelectTrigger>
 

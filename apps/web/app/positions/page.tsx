@@ -47,8 +47,24 @@ export default function Positions() {
                     <Dialog>
                       <DialogTrigger asChild>
                         <TableRow key={i} className=" cursor-pointer">
-                          <TableCell className=" text-center">
-                            {position.token0.name} / {position.token1.name}
+                          <TableCell className="flex flex-row items-center justify-around text-center">
+                            <div className="relative flex h-4 w-8">
+                              <div className=" absolute top-0">
+                                <img
+                                  src={`/${position.token0.name}.png`}
+                                  className="h-4 w-4"
+                                />
+                              </div>
+                              <div className=" absolute left-2">
+                                <img
+                                  src={`/${position.token1.name}.png`}
+                                  className="h-4 w-4"
+                                />
+                              </div>
+                            </div>
+                            <span className="flex">
+                              {position.token0.name} / {position.token1.name}
+                            </span>
                           </TableCell>
                           <TableCell className=" text-center">
                             {position.lpTokenAmount}

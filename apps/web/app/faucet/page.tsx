@@ -70,6 +70,7 @@ export default function Faucet() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
+                  <img src={`/${token}.png`} className=" h-4 w-4" />
                   <SelectValue placeholder="Select a token to drip" />
                 </SelectTrigger>
 

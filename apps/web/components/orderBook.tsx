@@ -78,20 +78,33 @@ export default function OrderBook({
       });
 
     console.log(priceToAmount);
-    const transformedArray = Object.keys(priceToAmount).map((key) => {
-      return {
-        price: Number(key).toFixed(2),
-        amount: priceToAmount[Number(key)],
-      };
-    });
+    const transformedArray = Object.keys(priceToAmount)
+      .map((key) => {
+        return {
+          price: Number(key).toFixed(2),
+          amount: priceToAmount[Number(key)],
+        };
+      })
+      .sort((a, b) => Number(a.price) - Number(b.price));
 
     setOrders(transformedArray);
   }, [tokenIn, tokenOut, limitStore.limitOrders]);
   return (
     <Card className=" w-full rounded-2xl shadow-none">
       <CardHeader>
-        <CardTitle className="text-xl">
-          {pair.tokenIn} / {pair.tokenOut} Orders
+        <CardTitle className=" flex flex-row items-center justify-center text-xl">
+          {" "}
+          <div className="relative flex h-4 w-8">
+            <div className=" absolute top-0">
+              <img src={`/${pair.tokenIn}.png`} className="h-4 w-4" />
+            </div>
+            <div className=" absolute left-2">
+              <img src={`/${pair.tokenOut}.png`} className="h-4 w-4" />
+            </div>
+          </div>
+          <span className="flex">
+            {pair.tokenIn} / {pair.tokenOut} Orders
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>

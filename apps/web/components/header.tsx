@@ -40,7 +40,7 @@ export default function Header({
         <div className="flex basis-6/12 items-center justify-start">
           <ArrowRightLeft className="h-8 w-8 -rotate-45" />
           <p
-            className="ml-2 cursor-pointer text-xl font-bold"
+            className="ml-2 cursor-pointer text-2xl font-bold"
             onClick={() => {
               handleNavigate("/");
             }}
@@ -133,16 +133,19 @@ export default function Header({
                 ) : (
                   <Popover>
                     <PopoverTrigger>
-                      <p className="text-xs font-bold">
+                      <p className="text-base font-bold">
                         {balances.balances["MINA"]} MINA
                       </p>
                     </PopoverTrigger>
-                    <PopoverContent className="flex flex-col gap-4 p-4">
+                    <PopoverContent className="flex w-fit flex-col gap-4 rounded-2xl p-4 px-6">
                       {poolStore.tokenList.map((token) => {
                         return (
-                          <p key={token.name} className="text-xs font-bold">
+                          <div
+                            key={token.name}
+                            className="flex flex-row justify-end text-right text-sm font-bold"
+                          >
                             {balances.balances[token.name]} {token.name}
-                          </p>
+                          </div>
                         );
                       })}
                     </PopoverContent>

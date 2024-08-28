@@ -91,6 +91,7 @@ export default function AddLiq() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
+                  <img src={`/${state.tokenA}.png`} className=" h-4 w-4" />
                   <SelectValue placeholder="Select a token to swap" />
                 </SelectTrigger>
 
@@ -133,6 +134,7 @@ export default function AddLiq() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
+                  <img src={`/${state.tokenB}.png`} className=" h-4 w-4" />
                   <SelectValue placeholder="Select a token to swap" />
                 </SelectTrigger>
 
