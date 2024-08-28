@@ -19,6 +19,7 @@ import {
 import { usePoolStore } from "@/lib/stores/poolStore";
 import { useLimitStore } from "@/lib/stores/limitStore";
 import { useChainStore } from "@/lib/stores/chain";
+import { DECIMALS } from "@/lib/constants";
 
 const chartConfig = {
   amount: {
@@ -74,7 +75,7 @@ export default function OrderBook({
         if (!priceToAmount[order.price]) {
           priceToAmount[order.price] = 0;
         }
-        priceToAmount[order.price] += order.amountIn;
+        priceToAmount[order.price] += order.amountIn / Number(DECIMALS);
       });
 
     console.log(priceToAmount);
