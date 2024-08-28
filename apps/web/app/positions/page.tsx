@@ -71,16 +71,20 @@ export default function Positions() {
                           </TableCell>
                           <TableCell className=" flex flex-col items-center justify-center gap-2">
                             <div>
-                              {position.token0Amount} {position.token0.name}
+                              {Math.floor(Number(position.token0Amount))}{" "}
+                              {position.token0.name}
                             </div>
                             <div>
-                              {position.token1Amount} {position.token1.name}
+                              {Math.floor(Number(position.token1Amount))}{" "}
+                              {position.token1.name}
                             </div>
                           </TableCell>
                           <TableCell className=" text-center">
-                            {(Number(position.lpTokenAmount) /
-                              Number(position.lpTokenTotalSupply)) *
-                              100}{" "}
+                            {(
+                              (Number(position.lpTokenAmount) /
+                                Number(position.lpTokenTotalSupply)) *
+                              100
+                            ).toFixed(1)}{" "}
                             %
                           </TableCell>
                         </TableRow>
