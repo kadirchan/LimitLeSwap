@@ -51,7 +51,6 @@ export class UserTokenKey extends Struct({
 export class LimitOrders extends RuntimeModule<{}> {
     @state() public orderNonce = State.from<Field>(Field);
     @state() public orders = StateMap.from<Field, LimitOrder>(Field, LimitOrder);
-    // escrow like something :D?
     @state() public captivedAmount = StateMap.from<UserTokenKey, Field>(UserTokenKey, Field);
 
     public constructor(@inject("Balances") private balances: Balances) {
