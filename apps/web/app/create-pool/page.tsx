@@ -17,6 +17,7 @@ import { usePoolStore } from "@/lib/stores/poolStore";
 import { useClientStore } from "@/lib/stores/client";
 import { Balance, TokenId } from "@proto-kit/library";
 import { PublicKey } from "o1js";
+import { DECIMALS } from "@/lib/constants";
 
 export default function CreatePool() {
   const walletStore = useWalletStore();
@@ -81,11 +82,20 @@ export default function CreatePool() {
     if (client.client && wallet && tokenA && tokenB) {
       const TokenIdA = TokenId.from(tokenA.tokenId);
       const TokenIdB = TokenId.from(tokenB.tokenId);
-      const TokenAmountA = Balance.from(tokenAmountA);
-      const TokenAmountB = Balance.from(tokenAmountB);
-      const lpRequested = Balance.from(
-        Math.floor(Math.sqrt(tokenAmountA * tokenAmountB)),
+      const TokenAmountA = Balance.from(
+        BigInt(tokenAmountA * Number(DECIMALS)),
       );
+      const TokenAmountB = Balance.from(
+        BigInt(tokenAmountB * Number(DECIMALS)),
+      );
+      const lpRequested = Balance.from(
+        BigInt(
+          Math.floor(Math.sqrt(tokenAmountA * tokenAmountB) * Number(DECIMALS)),
+        ),
+      );
+
+      console.log(lpRequested.mul(lpRequested).toString());
+      console.log(TokenAmountA.mul(TokenAmountB).toString());
 
       const poolModule = client.client.runtime.resolve("PoolModule");
 

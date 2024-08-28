@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/use-toast";
+import { DECIMALS } from "@/lib/constants";
 import useHasMounted from "@/lib/customHooks";
 import { useClientStore } from "@/lib/stores/client";
-import { Pool, Position, usePoolStore } from "@/lib/stores/poolStore";
+import { Position, usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
 import { Balance, TokenId } from "@proto-kit/library";
-import { ArrowDown, Flame, Plus } from "lucide-react";
+import { ArrowDown, Flame } from "lucide-react";
 import { PublicKey } from "o1js";
 import React, { useEffect, useState } from "react";
 
@@ -65,6 +66,21 @@ export default function RemoveLiq() {
       const removeAmount1 = Math.floor(
         (Number(position.token1Amount) * state.removeAmount) /
           Number(position.lpTokenAmount),
+      );
+
+      console.log(poolStore.positionList);
+
+      console.log(
+        "Remove token0",
+        position.token0.name,
+        position.token0.tokenId,
+        Balance.from(removeAmount0).toString(),
+      );
+      console.log(
+        "Remove token1",
+        position.token1.name,
+        position.token1.tokenId,
+        Balance.from(removeAmount1).toString(),
       );
       const tx = await client.client.transaction(
         PublicKey.fromBase58(wallet),
@@ -118,7 +134,11 @@ export default function RemoveLiq() {
                     {" "}
                     Remove LP Amount
                     <CustomInput
-                      value={state.removeAmount ?? 0}
+                      value={
+                        Number(state.removeAmount / Number(DECIMALS)).toFixed(
+                          2,
+                        ) ?? "0"
+                      }
                       placeholder={"0"}
                       pattern="^[0-9]*[.,]?[0-9]*$"
                       minLength={1}
@@ -183,9 +203,10 @@ export default function RemoveLiq() {
                         ? (
                             (Number(position?.token0Amount) *
                               state.removeAmount) /
-                            Number(position?.lpTokenAmount)
-                          ).toPrecision(4)
-                        : 0
+                            Number(position?.lpTokenAmount) /
+                            Number(DECIMALS)
+                          ).toFixed(2)
+                        : "0"
                     }
                     readOnly
                     placeholder={"0"}
@@ -203,8 +224,9 @@ export default function RemoveLiq() {
                         ? (
                             (Number(position?.token1Amount) *
                               state.removeAmount) /
-                            Number(position?.lpTokenAmount)
-                          ).toPrecision(4)
+                            Number(position?.lpTokenAmount) /
+                            Number(DECIMALS)
+                          ).toFixed(2)
                         : 0
                     }
                     readOnly

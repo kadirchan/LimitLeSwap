@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle } from "@/components/ui/card";
 import { CustomInput } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,8 +18,8 @@ import { Field, PublicKey, UInt64 } from "o1js";
 import { TokenId } from "@proto-kit/library";
 import React, { useEffect, useState } from "react";
 import OrderBook from "@/components/orderBook";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import MyOrders from "@/components/myOrders";
+import { DECIMALS } from "@/lib/constants";
 
 export default function LimitOrder() {
   const walletStore = useWalletStore();
@@ -36,7 +35,7 @@ export default function LimitOrder() {
     sellAmount: 0,
     buyAmount: 0,
     rate: "0",
-    validForDays: 0,
+    validForDays: 1,
   });
 
   useEffect(() => {
@@ -88,9 +87,9 @@ export default function LimitOrder() {
       const limitOrders = client.client.runtime.resolve("LimitOrders");
       const tokenIn = TokenId.from(sellToken.tokenId);
       const tokenOut = TokenId.from(buyToken.tokenId);
-      const amountIn = Field.from(sellAmount);
-      const amountOut = Field.from(buyAmount);
-      const expiration = UInt64.from(validForDays * 86400);
+      const amountIn = Field.from(BigInt(sellAmount * Number(DECIMALS)));
+      const amountOut = Field.from(BigInt(buyAmount * Number(DECIMALS)));
+      const expiration = UInt64.from(validForDays * 17280);
       const tx = await client.client.transaction(
         PublicKey.fromBase58(wallet),
         async () => {
@@ -166,7 +165,7 @@ export default function LimitOrder() {
                   </Select>
                 </div>
 
-                <div className="relative my-2 w-96">
+                <div className="relative my-2 w-10">
                   <Button
                     variant={"outline"}
                     className=" absolute bottom-0 left-0 right-0 top-0 mx-auto my-auto border-0  ring-1 ring-border ring-offset-4 hover:bg-card"

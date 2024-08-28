@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Field, Poseidon, PublicKey } from "o1js";
 import { useLimitStore } from "@/lib/stores/limitStore";
 import { useChainStore } from "@/lib/stores/chain";
+import { DECIMALS } from "@/lib/constants";
 
 export default function Swap() {
   const walletStore = useWalletStore();
@@ -58,14 +59,17 @@ export default function Swap() {
     poolSellTokenReserve: number,
     sellAmount: number,
   ) => {
+    // console.table([poolBuyTokenReserve, poolSellTokenReserve, sellAmount]);
     const amountInWithFee = sellAmount * 997;
 
     const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
     const denominator = poolSellTokenReserve * 1000 + amountInWithFee;
     const amountOut = poolBuyTokenReserve - numerator / denominator;
 
-    const price = (amountOut / sellAmount).toPrecision(4);
+    const price = (amountOut / sellAmount).toFixed(2);
     const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
+
+    // console.table([amountOut, price, priceImpact, amountInWithFee]);
 
     return {
       amountOut,
@@ -176,8 +180,7 @@ export default function Swap() {
     setPool(pool ?? null);
     // console.log(pool);
     if (pool) {
-      const sellAmount = Number(state.sellAmount);
-      const buyAmount = Number(state.buyAmount);
+      const sellAmount = Number(state.sellAmount) * Number(DECIMALS);
 
       const poolSellTokenReserve =
         pool.token0.name === sellToken?.name
@@ -196,13 +199,12 @@ export default function Swap() {
         });
         return;
       } else {
-        const sellAmount = Number(state.sellAmount);
         const { amountOut, price, priceImpact } = calculateSwap(
           poolBuyTokenReserve,
           poolSellTokenReserve,
           sellAmount,
         );
-        console.log(price);
+        console.table([amountOut, price, priceImpact]);
         const { ordersToFill, bestAmountOut, newPriceImpact } =
           calculateWithLimitOrders(
             buyToken!,
@@ -213,12 +215,14 @@ export default function Swap() {
             poolSellTokenReserve,
           );
 
+        console.table([ordersToFill, bestAmountOut, newPriceImpact]);
+
         if (bestAmountOut > amountOut) {
           setlimitState({
             execute: true,
             ordersToFill,
-            bestAmountOut: Number(bestAmountOut.toPrecision(4)),
-            newPriceImpact: Number(newPriceImpact.toPrecision(2)),
+            bestAmountOut: bestAmountOut,
+            newPriceImpact: Number(newPriceImpact.toFixed(1)),
           });
         } else {
           setlimitState({
@@ -231,8 +235,8 @@ export default function Swap() {
 
         setState({
           ...state,
-          buyAmount: Number(amountOut.toPrecision(4)),
-          priceImpact: priceImpact.toPrecision(2),
+          buyAmount: amountOut,
+          priceImpact: priceImpact.toFixed(2),
         });
       }
     }
@@ -269,7 +273,7 @@ export default function Swap() {
     if (limitState.execute) {
       const tokenIn = TokenId.from(sellToken?.tokenId);
       const tokenOut = TokenId.from(buyToken?.tokenId);
-      const amountIn = Balance.from(state.sellAmount);
+      const amountIn = Balance.from(state.sellAmount * Number(DECIMALS));
       const amountOut = Balance.from(Math.floor(limitState.bestAmountOut));
       const orderbundle = OrderBundle.empty();
 
@@ -313,7 +317,7 @@ export default function Swap() {
     } else {
       const tokenIn = TokenId.from(sellToken?.tokenId);
       const tokenOut = TokenId.from(buyToken?.tokenId);
-      const amountIn = Balance.from(state.sellAmount);
+      const amountIn = Balance.from(state.sellAmount * Number(DECIMALS));
       const amountOut = Balance.from(Math.floor(state.buyAmount));
 
       console.log(amountIn.toString(), amountOut.toString());
@@ -403,7 +407,9 @@ export default function Swap() {
               <Label className="px-3 text-sm text-gray-600">
                 Buy
                 <CustomInput
-                  value={state.buyAmount}
+                  value={Number(
+                    (state.buyAmount / Number(DECIMALS)).toFixed(2),
+                  )}
                   readOnly
                   placeholder={"0"}
                   pattern="^[0-9]*[.,]?[0-9]*$"

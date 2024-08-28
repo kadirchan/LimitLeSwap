@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { DECIMALS } from "@/lib/constants";
 
 export default function Positions() {
   const poolStore = usePoolStore();
@@ -67,15 +68,21 @@ export default function Positions() {
                             </span>
                           </TableCell>
                           <TableCell className=" text-center">
-                            {position.lpTokenAmount}
+                            {(
+                              Number(position.lpTokenAmount) / Number(DECIMALS)
+                            ).toFixed(2)}
                           </TableCell>
                           <TableCell className=" flex flex-col items-center justify-center gap-2">
                             <div>
-                              {Math.floor(Number(position.token0Amount))}{" "}
+                              {(
+                                Number(position.token0Amount) / Number(DECIMALS)
+                              ).toFixed(2)}{" "}
                               {position.token0.name}
                             </div>
                             <div>
-                              {Math.floor(Number(position.token1Amount))}{" "}
+                              {(
+                                Number(position.token1Amount) / Number(DECIMALS)
+                              ).toFixed(2)}{" "}
                               {position.token1.name}
                             </div>
                           </TableCell>
@@ -107,21 +114,34 @@ export default function Positions() {
                             <div className="flex text-base">
                               Your Pool Token Amount:
                             </div>
-                            <div className="flex">{position.lpTokenAmount}</div>
+                            <div className="flex">
+                              {(
+                                Number(position.lpTokenAmount) /
+                                Number(DECIMALS)
+                              ).toFixed(2)}
+                            </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
                             <div className="flex text-base">
                               Your Pooled {position.token0.name} Amount:
                             </div>
-                            <div className="flex">{position.token0Amount}</div>
+                            <div className="flex">
+                              {(
+                                Number(position.token0Amount) / Number(DECIMALS)
+                              ).toFixed(2)}
+                            </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
                             <div className="flex text-base">
                               Your Pooled {position.token1.name} Amount:
                             </div>
-                            <div className="flex">{position.token1Amount}</div>
+                            <div className="flex">
+                              {(
+                                Number(position.token1Amount) / Number(DECIMALS)
+                              ).toFixed(2)}
+                            </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
