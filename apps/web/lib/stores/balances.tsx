@@ -67,7 +67,7 @@ export const useBalancesStore = create<
       console.log(tokenId);
 
       const tx = await client.transaction(sender, async () => {
-        await balances.mintToken(tokenId, sender, Balance.from(1000));
+        await balances.mintToken(tokenId, sender, Balance.from(100000));
       });
 
       await tx.sign();
