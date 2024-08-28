@@ -8,6 +8,7 @@ import { useCallback, useEffect } from "react";
 import { useChainStore } from "./chain";
 import { useWalletStore } from "./wallet";
 import { Token, usePoolStore } from "./poolStore";
+import { DECIMALS } from "../constants";
 
 export interface BalancesState {
   loading: boolean;
@@ -67,7 +68,8 @@ export const useBalancesStore = create<
       console.log(tokenId);
 
       const tx = await client.transaction(sender, async () => {
-        await balances.mintToken(tokenId, sender, Balance.from(100000));
+        const amount = BigInt(1000) * DECIMALS;
+        await balances.mintToken(tokenId, sender, Balance.from(amount));
       });
 
       await tx.sign();
