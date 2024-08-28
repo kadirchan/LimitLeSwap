@@ -92,6 +92,43 @@ export class PoolModule extends RuntimeModule<{}> {
     }
 
     @runtimeMethod()
+    public async addLiquidityToEmpty(
+        tokenA: TokenId,
+        tokenB: TokenId,
+        tokenAmountA: Balance,
+        tokenAmountB: Balance,
+        requester: PublicKey,
+        lp_requested: Balance
+    ) {
+        const smallerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenA, tokenB);
+        const largerTokenId = Provable.if(tokenA.lessThan(tokenB), tokenB, tokenA);
+        const poolId = Poseidon.hash([smallerTokenId, largerTokenId]);
+        const pool = await this.pools.get(poolId);
+        assert(pool.isSome, "Pool does not exist");
+        assert(lp_requested.greaterThan(Balance.from(0)), "LP tokens must be greater than 0");
+
+        const poolAccount = PublicKey.fromGroup(
+            Poseidon.hashToGroup([poolId, smallerTokenId, largerTokenId])
+        );
+
+        const lpTotal = await this.balances.getCirculatingSupply(poolId);
+
+        assert(lpTotal.equals(Balance.from(0)), "Pool is not empty");
+        const requesterBalanceA = await this.balances.getBalance(tokenA, requester);
+        assert(requesterBalanceA.greaterThanOrEqual(tokenAmountA));
+        const requesterBalanceB = await this.balances.getBalance(tokenB, requester);
+        assert(requesterBalanceB.greaterThanOrEqual(tokenAmountB));
+        await this.balances.transfer(tokenA, requester, poolAccount, tokenAmountA);
+        await this.balances.transfer(tokenB, requester, poolAccount, tokenAmountB);
+        const lp_amount_threshold = tokenAmountA.mul(tokenAmountB);
+        const requested_square = lp_requested.mul(lp_requested);
+        assert(lp_amount_threshold.greaterThanOrEqual(requested_square));
+        await this.balances.mintToken(poolId, this.transaction.sender.value, lp_requested);
+        const updatedPool = Pool.from(tokenA, tokenB, tokenAmountA, tokenAmountB);
+        await this.pools.set(poolId, updatedPool);
+    }
+
+    @runtimeMethod()
     public async addLiquidity(
         tokenA: TokenId,
         tokenB: TokenId,

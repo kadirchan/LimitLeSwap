@@ -172,8 +172,26 @@ export default function AddLiq() {
       console.log(lpRequested.mul(lpRequested).toString());
       console.log(TokenAmountA.mul(TokenAmountB).toString());
 
-      // TODO: Implement addLiquidityEmptyPool
-      console.log("Not implemented yet");
+      const poolModule = client.client.runtime.resolve("PoolModule");
+
+      const tx = await client.client.transaction(
+        PublicKey.fromBase58(wallet),
+        async () => {
+          await poolModule.addLiquidityToEmpty(
+            TokenIdA,
+            TokenIdB,
+            TokenAmountA,
+            TokenAmountB,
+            PublicKey.fromBase58(wallet),
+            lpRequested,
+          );
+        },
+      );
+
+      await tx.sign();
+      await tx.send();
+      //@ts-ignore
+      walletStore.addPendingTransaction(tx.transaction);
     }
   };
   return (
