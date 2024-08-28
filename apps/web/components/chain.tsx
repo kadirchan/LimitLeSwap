@@ -65,7 +65,7 @@ export function Chain({ height }: ChainProps) {
           if (!pool) {
             return;
           }
-          console.log(pool);
+          // console.log(pool);
           const token0Id = pool.tokenA.toString();
           const token1Id = pool.tokenB.toString();
 
@@ -77,9 +77,9 @@ export function Chain({ height }: ChainProps) {
               TokenId.from(poolId.toString()),
             );
 
-          console.log(BigInt(token0Id));
-          console.log(BigInt(token1Id));
-          console.log(BigInt(token0Id) < BigInt(token1Id));
+          // console.log(BigInt(token0Id));
+          // console.log(BigInt(token1Id));
+          // console.log(BigInt(token0Id) < BigInt(token1Id));
 
           if (BigInt(token0Id) < BigInt(token1Id)) {
             const pool: Pool = {
@@ -91,23 +91,23 @@ export function Chain({ height }: ChainProps) {
               lpTokenSupply: lpTokenSupply?.toString() ?? "0",
             };
 
-            console.log("31", pool);
+            // console.log("31", pool);
             poolList.push(pool);
           } else {
             const smallerTokenId = token1Id;
-            console.log("smallerTokenId", smallerTokenId);
+            // console.log("smallerTokenId", smallerTokenId);
             const smallerToken = tokenList.find(
               (token) => token.tokenId === token1Id,
             );
-            console.log("smallerToken", smallerToken);
-            console.log("smallerTokenAmount", token1Amount);
+            // console.log("smallerToken", smallerToken);
+            // console.log("smallerTokenAmount", token1Amount);
             const biggerTokenId = token0Id;
-            console.log("biggerTokenId", biggerTokenId);
+            // console.log("biggerTokenId", biggerTokenId);
             const biggerToken = tokenList.find(
               (token) => token.tokenId === token0Id,
             );
-            console.log("biggerToken", biggerToken);
-            console.log("biggerTokenAmount", token0Amount);
+            // console.log("biggerToken", biggerToken);
+            // console.log("biggerTokenAmount", token0Amount);
             const pool: Pool = {
               poolId: poolId.toString(),
               token0: tokenList.find((token) => token.tokenId === token1Id)!,
@@ -117,7 +117,7 @@ export function Chain({ height }: ChainProps) {
               lpTokenSupply: lpTokenSupply?.toString() ?? "0",
             };
 
-            console.log("52", pool);
+            // console.log("52", pool);
             poolList.push(pool);
           }
 
