@@ -10,6 +10,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useClientStore } from "@/lib/stores/client";
 import { Field, PublicKey } from "o1js";
+import { DECIMALS } from "@/lib/constants";
 
 export default function MyOrders() {
   const walletStore = useWalletStore();
@@ -70,13 +71,15 @@ export default function MyOrders() {
                           <span className=" font-medium text-red-600">
                             Sell
                           </span>{" "}
-                          {limitOrder.tokenInAmount} {tokenIn?.name}{" "}
+                          {Number(limitOrder.tokenInAmount) / Number(DECIMALS)}{" "}
+                          {tokenIn?.name}{" "}
                         </div>
                         <div>
                           <span className=" font-medium text-green-600">
                             For
                           </span>{" "}
-                          {limitOrder.tokenOutAmount} {tokenOut?.name}
+                          {Number(limitOrder.tokenOutAmount) / Number(DECIMALS)}{" "}
+                          {tokenOut?.name}
                         </div>
                         <div className=" text-sm">
                           <span className=" text-sm font-normal">

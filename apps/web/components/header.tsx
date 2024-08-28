@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useBalancesStore } from "@/lib/stores/balances";
 import { usePoolStore } from "@/lib/stores/poolStore";
 import { ModeToggle } from "./mode-toggle";
+import { DECIMALS } from "@/lib/constants";
 
 export interface HeaderProps {
   loading: boolean;
@@ -134,7 +135,10 @@ export default function Header({
                   <Popover>
                     <PopoverTrigger>
                       <p className="text-base font-bold">
-                        {balances.balances["MINA"]} MINA
+                        {(
+                          BigInt(balances.balances["MINA"] ?? 0) / DECIMALS
+                        ).toString()}{" "}
+                        MINA
                       </p>
                     </PopoverTrigger>
                     <PopoverContent className="flex w-fit flex-col gap-4 rounded-2xl p-4 px-6">
@@ -144,7 +148,11 @@ export default function Header({
                             key={token.name}
                             className="flex flex-row justify-end text-right text-sm font-bold"
                           >
-                            {balances.balances[token.name]} {token.name}
+                            {(
+                              BigInt(balances.balances[token.name] ?? 0) /
+                              DECIMALS
+                            ).toString()}{" "}
+                            {token.name}
                           </div>
                         );
                       })}
