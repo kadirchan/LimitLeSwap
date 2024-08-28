@@ -119,6 +119,15 @@ export class PoolModule extends RuntimeModule<{}> {
 
         assert(tokenAmountA.mul(reserveB).equals(tokenAmountB.mul(reserveA)), "Invalid ratio");
 
+        Provable.asProver(() => {
+            console.log("reserveA", reserveA.toString());
+            console.log("reserveB", reserveB.toString());
+            console.log("tokenAmountA", tokenAmountA.toString());
+            console.log("tokenAmountB", tokenAmountB.toString());
+            console.log(tokenAmountA.mul(reserveB).toString());
+            console.log(tokenAmountB.mul(reserveA).toString());
+            console.log(tokenAmountA.mul(reserveB).equals(tokenAmountB.mul(reserveA)).toBoolean());
+        });
         const lpSquare = lpRequested.mul(lpRequested);
 
         assert(lpSquare.lessThanOrEqual(tokenAmountA.mul(tokenAmountB)), "Invalid LP token amount");
@@ -231,14 +240,40 @@ export class PoolModule extends RuntimeModule<{}> {
         let reserveIn = await this.balances.getBalance(tokenIn, poolAccount);
         let reserveOut = await this.balances.getBalance(tokenOut, poolAccount);
 
-        const kPrev = reserveIn.mul(reserveOut).mul(1000n);
+        Provable.asProver(() => {
+            console.log("reserveIn", reserveIn.toString());
+            console.log("reserveOut", reserveOut.toString());
+            console.log("amountIn", amountIn.toString());
+            console.log("amountOut", amountOut.toString());
+        });
+        const kPrev = reserveIn.mul(reserveOut);
+
+        Provable.asProver(() => {
+            console.log("kPrev", kPrev.toString());
+        });
 
         assert(amountOut.lessThanOrEqual(reserveOut), "Not enough token in pool");
 
-        const adjustedReserveIn = amountIn.mul(997n).add(reserveIn.mul(1000n));
+        Provable.asProver(() => {
+            console.log("first way", amountIn.mul(997n).div(1000n).add(reserveIn));
+            console.log("second way", amountIn.div(1000n).mul(997n).add(reserveIn));
+        });
+
+        const adjustedReserveIn = amountIn.mul(997n).div(1000n).add(reserveIn);
         const adjustedReserveOut = reserveOut.sub(amountOut);
 
+        Provable.asProver(() => {
+            console.log("adjustedReserveIn", adjustedReserveIn.toString());
+            console.log("adjustedReserveOut", adjustedReserveOut.toString());
+        });
+
         const k = adjustedReserveIn.mul(adjustedReserveOut);
+
+        Provable.asProver(() => {
+            console.log("k", k.toString());
+            console.log("kPrev", kPrev.toString());
+            console.log("k > kPrev", k.greaterThanOrEqual(kPrev).toBoolean());
+        });
 
         assert(k.greaterThanOrEqual(kPrev), "Invalid swap");
 
@@ -289,8 +324,6 @@ export class PoolModule extends RuntimeModule<{}> {
             Provable.asProver(() => {
                 console.log("order", limitOrderId.toString());
                 console.log("isActive", isActive.toBoolean());
-                // console.log("tokenin", tokenIn);
-                // console.log("res", order.tokenOut.equals(tokenIn).toBoolean());
             });
             assert(order.tokenOut.equals(tokenIn).or(isActive.not()), "Invalid token out");
             assert(order.tokenIn.equals(tokenOut).or(isActive.not()), "Invalid token in");
