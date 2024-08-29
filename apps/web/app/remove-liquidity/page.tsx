@@ -215,7 +215,13 @@ export default function RemoveLiq() {
                     maxLength={40}
                     inputMode="decimal"
                   />
-                  <p className=" font-bold">{position?.token0.name}</p>
+                  <div className=" flex flex-row items-center gap-1">
+                    <img
+                      src={`/${position?.token0.name}.png`}
+                      className="h-4 w-4"
+                    />
+                    <p>{position?.token0.name}</p>
+                  </div>
                 </div>
                 <div className=" flex flex-row items-center justify-between">
                   <CustomInput
@@ -236,7 +242,13 @@ export default function RemoveLiq() {
                     maxLength={40}
                     inputMode="decimal"
                   />
-                  <p className=" font-bold">{position?.token1.name}</p>
+                  <div className=" flex flex-row items-center gap-1">
+                    <img
+                      src={`/${position?.token1.name}.png`}
+                      className="h-4 w-4"
+                    />
+                    <p>{position?.token1.name}</p>
+                  </div>
                 </div>
               </Label>
             </div>
