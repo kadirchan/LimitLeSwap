@@ -419,16 +419,16 @@ export default function Swap() {
                   type="number"
                 />
                 {limitState.execute ? (
-                  <p className=" text-xl">
+                  <p className=" text-xl text-green-600">
                     <span className=" text-xs">With LimitSwap:</span>{" "}
-                    {limitState.bestAmountOut}
+                    {(limitState.bestAmountOut / Number(DECIMALS)).toFixed(2)}
                   </p>
                 ) : null}
                 <p>Price Impact: {state.priceImpact} %</p>
                 {limitState.execute ? (
-                  <p>
+                  <p className=" text-green-600">
                     <span className=" text-xs">With LimitSwap:</span>{" "}
-                    {limitState.newPriceImpact}
+                    {limitState.newPriceImpact} %
                   </p>
                 ) : null}
               </Label>
@@ -463,7 +463,13 @@ export default function Swap() {
                 wallet && handleSubmit();
               }}
             >
-              {wallet ? (pool ? "Swap" : "Pool Not Found") : "Connect wallet"}
+              {wallet
+                ? pool
+                  ? limitState.execute
+                    ? "LimitLeSwap!"
+                    : "Swap"
+                  : "Pool Not Found"
+                : "Connect wallet"}
             </Button>
           </Card>
         </div>
