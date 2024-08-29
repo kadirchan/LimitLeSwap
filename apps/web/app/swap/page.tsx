@@ -192,10 +192,11 @@ export default function Swap() {
           ? Number(pool.token0Amount)
           : Number(pool.token1Amount);
 
-      if (sellAmount >= poolSellTokenReserve) {
+      if (sellAmount >= poolSellTokenReserve || sellAmount <= 0) {
         setState({
           ...state,
           buyAmount: 0,
+          priceImpact: "0",
         });
         return;
       } else {
