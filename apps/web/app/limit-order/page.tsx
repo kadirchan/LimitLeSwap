@@ -40,7 +40,7 @@ export default function LimitOrder() {
 
   useEffect(() => {
     if (state.sellAmount > 0 && state.buyAmount > 0) {
-      const rate = (state.buyAmount / state.sellAmount).toPrecision(4);
+      const rate = (state.buyAmount / state.sellAmount).toFixed(2);
       setState({
         ...state,
         rate,
