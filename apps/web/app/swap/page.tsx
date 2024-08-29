@@ -192,7 +192,10 @@ export default function Swap() {
           ? Number(pool.token0Amount)
           : Number(pool.token1Amount);
 
-      if (sellAmount >= poolSellTokenReserve || sellAmount <= 0) {
+      if (
+        // sellAmount > poolSellTokenReserve ||
+        sellAmount <= 0
+      ) {
         setState({
           ...state,
           buyAmount: 0,
@@ -425,7 +428,17 @@ export default function Swap() {
                     {(limitState.bestAmountOut / Number(DECIMALS)).toFixed(2)}
                   </p>
                 ) : null}
-                <p>Price Impact: {state.priceImpact} %</p>
+                <p
+                  className={
+                    Number(state.priceImpact) > 30
+                      ? " text-red-600"
+                      : Number(state.priceImpact) > 10
+                        ? " text-orange-400"
+                        : " "
+                  }
+                >
+                  Price Impact: {state.priceImpact} %
+                </p>
                 {limitState.execute ? (
                   <p className=" text-green-600">
                     <span className=" text-xs">With LimitSwap:</span>{" "}
