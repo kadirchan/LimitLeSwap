@@ -167,7 +167,7 @@ export default function OrderBook({
             </BarChart>
           </ChartContainer>
         ) : (
-          <div className="flex h-40 items-center justify-center">
+          <div className="flex h-full items-center justify-center">
             <p className="text-sm text-zinc-500">No orders available</p>
           </div>
         )}

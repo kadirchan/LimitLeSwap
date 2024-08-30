@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { CustomInput } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Droplets, Plus } from "lucide-react";
+import { Waves, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -127,7 +127,7 @@ export default function CreatePool() {
           <Card className="w-full border-0 p-4 shadow-none">
             <div className="mb-2 flex flex-row items-center justify-center gap-2">
               <h2 className="text-2xl font-bold">Create Pool</h2>
-              <Droplets className="h-6 w-6" />
+              <Waves className="h-6 w-6" />
             </div>
 
             <div className="flex flex-row items-center rounded-2xl border p-4">

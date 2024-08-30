@@ -113,13 +113,13 @@ export default function RemoveLiq() {
               <Flame className="h-6 w-6" />
             </div>
 
-            <div className="flex flex-col items-center gap-4 rounded-2xl border p-4 pb-6">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border p-4 px-6 pb-6">
               <div className="flex flex-row items-center">
                 <div className=" flex flex-col">
                   <Label className=" text-lg">
                     {" "}
                     Remove Position
-                    <p className=" px-3 py-2 text-4xl font-bold">
+                    <p className=" px-2 py-2 text-4xl">
                       {position
                         ? Math.ceil(
                             (state.removeAmount /
@@ -144,7 +144,7 @@ export default function RemoveLiq() {
                       minLength={1}
                       maxLength={40}
                       inputMode="decimal"
-                      className=" text-2xl"
+                      className=" px-2 text-xl"
                     />
                   </Label>
                 </div>
@@ -157,6 +157,22 @@ export default function RemoveLiq() {
                   disabled={poolStore.positionList.length === 0}
                 >
                   <SelectTrigger className=" w-60 rounded-2xl">
+                    {position ? (
+                      <div className="relative flex h-4 w-6">
+                        <div className=" absolute top-0">
+                          <img
+                            src={`/${position?.token0.name}.png`}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                        <div className=" absolute left-2">
+                          <img
+                            src={`/${position?.token1.name}.png`}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                      </div>
+                    ) : null}
                     <SelectValue placeholder="Select position" />
                   </SelectTrigger>
 
@@ -173,7 +189,10 @@ export default function RemoveLiq() {
               </div>
               <Slider
                 value={[
-                  (state.removeAmount / Number(position?.lpTokenAmount)) * 100,
+                  (poolStore.positionList.length === 0 || !position
+                    ? 0
+                    : state.removeAmount / Number(position?.lpTokenAmount)) *
+                    100,
                 ]}
                 step={1}
                 onValueChange={(value) => {
@@ -192,65 +211,54 @@ export default function RemoveLiq() {
               <ArrowDown className="h-6 w-6" />
             </div>
 
-            <div className=" flex flex-col items-center rounded-2xl border p-4">
-              <Label>
-                {" "}
-                You will receive
-                <div className=" flex flex-row items-center justify-between">
-                  <CustomInput
-                    value={
-                      position
+            <div className=" flex flex-col items-center justify-center rounded-2xl border p-4">
+              {position ? (
+                <>
+                  <h3 className="text-base">You will receive</h3>
+                  <div className=" flex w-full flex-row items-center justify-between px-3 py-1">
+                    <p className="flex h-12 items-center justify-start text-xl">
+                      {position
                         ? (
                             (Number(position?.token0Amount) *
                               state.removeAmount) /
                             Number(position?.lpTokenAmount) /
                             Number(DECIMALS)
-                          ).toFixed(2)
-                        : "0"
-                    }
-                    readOnly
-                    placeholder={"0"}
-                    pattern="^[0-9]*[.,]?[0-9]*$"
-                    minLength={1}
-                    maxLength={40}
-                    inputMode="decimal"
-                  />
-                  <div className=" flex flex-row items-center gap-1">
-                    <img
-                      src={`/${position?.token0.name}.png`}
-                      className="h-4 w-4"
-                    />
-                    <p>{position?.token0.name}</p>
+                          ).toFixed(3)
+                        : "0"}
+                    </p>
+                    <div className=" flex flex-row items-center gap-1">
+                      <img
+                        src={`/${position?.token0.name}.png`}
+                        className="flex h-6 w-6"
+                      />
+                      <p className="flex">{position?.token0.name}</p>
+                    </div>
                   </div>
-                </div>
-                <div className=" flex flex-row items-center justify-between">
-                  <CustomInput
-                    value={
-                      position
+                  <div className=" flex w-full flex-row items-center justify-between px-3 py-1">
+                    <p className="flex h-12 items-center justify-start text-xl">
+                      {position
                         ? (
                             (Number(position?.token1Amount) *
                               state.removeAmount) /
                             Number(position?.lpTokenAmount) /
                             Number(DECIMALS)
-                          ).toFixed(2)
-                        : 0
-                    }
-                    readOnly
-                    placeholder={"0"}
-                    pattern="^[0-9]*[.,]?[0-9]*$"
-                    minLength={1}
-                    maxLength={40}
-                    inputMode="decimal"
-                  />
-                  <div className=" flex flex-row items-center gap-1">
-                    <img
-                      src={`/${position?.token1.name}.png`}
-                      className="h-4 w-4"
-                    />
-                    <p>{position?.token1.name}</p>
+                          ).toFixed(3)
+                        : 0}
+                    </p>
+                    <div className=" flex flex-row items-center gap-1">
+                      <img
+                        src={`/${position?.token1.name}.png`}
+                        className="h-6 w-6"
+                      />
+                      <p>{position?.token1.name}</p>
+                    </div>
                   </div>
-                </div>
-              </Label>
+                </>
+              ) : (
+                <p className="text-base">
+                  Select a position to remove liquidity
+                </p>
+              )}
             </div>
 
             <Button
