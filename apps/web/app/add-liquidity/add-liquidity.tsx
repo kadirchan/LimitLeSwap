@@ -37,7 +37,7 @@ export default function AddLiq() {
   ) => {
     return (tokenBReserve * tokenAAmount) / tokenAReserve;
   };
-  const [warning, setWarning] = useState(false);
+
   const [pool, setPool] = useState<Pool | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [state, setState] = useState({
@@ -85,7 +85,6 @@ export default function AddLiq() {
       wallet &&
       pool &&
       state.lpRequested > 0 &&
-      !warning &&
       tokenAid &&
       tokenBid
     ) {
@@ -197,8 +196,8 @@ export default function AddLiq() {
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
-        <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Card className="w-full border-0 p-4 shadow-none">
+        <div className="flex basis-5/12 flex-col items-center justify-center 2xl:basis-3/12">
+          <Card className="flex w-full flex-col items-center border-0 p-4 shadow-none">
             <div className="mb-2 flex flex-row items-center justify-center gap-2">
               <h2 className="text-2xl font-bold">Add Liquidity</h2>
               <Droplets className="h-6 w-6" />
@@ -272,7 +271,7 @@ export default function AddLiq() {
               </Select>
             </div>
 
-            <div className="relative my-2 w-96">
+            <div className="relative my-2 w-10">
               <Button
                 variant={"outline"}
                 className=" absolute bottom-0 left-0 right-0 top-0 mx-auto my-auto cursor-default  border-0 ring-1 ring-border ring-offset-4 hover:bg-card"
@@ -282,7 +281,7 @@ export default function AddLiq() {
               </Button>
             </div>
 
-            <div className="mt-4 flex flex-row items-center rounded-2xl border p-4">
+            <div className=" flex flex-row items-center rounded-2xl border p-4">
               <CustomInput
                 value={state.tokenAmountB}
                 onChange={(e) => {
@@ -349,21 +348,15 @@ export default function AddLiq() {
               </Select>
             </div>
 
-            {warning ? (
-              <p className=" text-sm text-destructive">
-                Amounts should be integers
-              </p>
-            ) : null}
-
-            <div className="my-2 flex w-96 items-center justify-center">
+            <div className="my-2 flex w-10 items-center justify-center">
               <ArrowDown className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 flex flex-col gap-4 rounded-2xl border p-4">
+            <div className="mt-2 flex w-full flex-col items-center gap-4 rounded-2xl border p-4">
               <h3 className=" py-2 text-sm">
                 Current Prices and Your Pool Share
               </h3>
-              <div className="grid grid-cols-3">
+              <div className="grid w-full grid-cols-3">
                 <div className="col-span-1 flex flex-col items-center">
                   <p>
                     {pool && Number(pool?.lpTokenSupply) > 0
