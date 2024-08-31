@@ -364,7 +364,7 @@ export default function AddLiq() {
                         ).toFixed(2)
                       : 0}
                   </p>
-                  <p className=" text-sm text-gray-600">{`${state.tokenA} / ${state.tokenB}`}</p>
+                  <p className=" text-custom-input text-sm">{`${state.tokenA} / ${state.tokenB}`}</p>
                 </div>
                 <div className="col-span-1 flex flex-col items-center">
                   <p>
@@ -375,7 +375,7 @@ export default function AddLiq() {
                         ).toFixed(2)
                       : 0}
                   </p>
-                  <p className=" text-sm text-gray-600">{`${state.tokenB} / ${state.tokenA}`}</p>
+                  <p className=" text-custom-input text-sm">{`${state.tokenB} / ${state.tokenA}`}</p>
                 </div>
                 <div className="col-span-1 flex flex-col items-center">
                   {state.lpRequested > 0 && pool ? (
@@ -398,7 +398,7 @@ export default function AddLiq() {
                         : 0
                     } %`}</p>
                   )}
-                  <p className=" text-sm text-gray-600">Share of pool</p>
+                  <p className=" text-custom-input text-sm">Share of pool</p>
                 </div>
               </div>
             </div>

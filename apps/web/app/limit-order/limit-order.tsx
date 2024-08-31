@@ -123,7 +123,7 @@ export default function LimitOrder() {
                 </div>
 
                 <div className="flex flex-row items-center rounded-2xl border p-4">
-                  <Label className="px-3 text-sm text-gray-600">
+                  <Label className="text-custom-input px-3 text-sm">
                     Sell
                     <CustomInput
                       value={state.sellAmount}
@@ -186,7 +186,7 @@ export default function LimitOrder() {
                 </div>
 
                 <div className="flex flex-row items-center rounded-2xl border p-4">
-                  <Label className="px-3 text-sm text-gray-600">
+                  <Label className="text-custom-input px-3 text-sm">
                     For
                     <CustomInput
                       value={state.buyAmount}
@@ -239,7 +239,7 @@ export default function LimitOrder() {
               <div className=" flex basis-3/5 flex-col">
                 <div className="grid grid-cols-5 rounded-2xl border p-4">
                   <div className=" col-span-3">
-                    <Label className="px-3 text-sm text-gray-600">
+                    <Label className="text-custom-input px-3 text-sm">
                       {state.sellToken} / {state.buyToken} Rate
                       <CustomInput
                         className=" text-xl"
@@ -252,7 +252,7 @@ export default function LimitOrder() {
                   </div>
 
                   <div className=" col-span-2">
-                    <Label className="px-3 text-sm text-gray-600">
+                    <Label className="text-custom-input px-3 text-sm">
                       Valid For Days
                       <CustomInput
                         value={state.validForDays}

@@ -349,7 +349,7 @@ export default function Swap() {
             </div>
 
             <div className="flex flex-row items-center rounded-2xl border p-4">
-              <Label className="px-3 text-sm text-gray-600">
+              <Label className="text-custom-input px-3 text-sm">
                 Sell
                 <CustomInput
                   value={state.sellAmount}
@@ -405,7 +405,7 @@ export default function Swap() {
             </div>
 
             <div className=" flex flex-row items-center rounded-2xl border p-4">
-              <Label className="px-3 text-sm text-gray-600">
+              <Label className="text-custom-input px-3 text-sm">
                 Buy
                 <CustomInput
                   value={Number(

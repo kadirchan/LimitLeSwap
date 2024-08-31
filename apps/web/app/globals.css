@@ -22,6 +22,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
+    --custom-input: 215 13.8% 34.1%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
@@ -40,9 +41,9 @@
     --popover-foreground: 0 0% 98%;
     --primary: 263.4 69.3% 42.2%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 216 12.2% 83.9%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
+    --muted: 216 12.2% 83.9%;
     --muted-foreground: 240 5% 64.9%;
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
@@ -50,6 +51,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
+    --custom-input: 216 12.2% 83.9%;
     --ring: 240 4.9% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -76,4 +78,8 @@ input::-webkit-inner-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+.text-custom-input {
+  color: hsl(var(--custom-input));
 }
