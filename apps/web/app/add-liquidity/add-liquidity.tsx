@@ -12,7 +12,6 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { DECIMALS } from "@/lib/constants";
 import useHasMounted from "@/lib/customHooks";
-import { useBalancesStore } from "@/lib/stores/balances";
 import { useClientStore } from "@/lib/stores/client";
 import { Pool, Position, usePoolStore } from "@/lib/stores/poolStore";
 import { useWalletStore } from "@/lib/stores/wallet";
@@ -27,7 +26,6 @@ export default function AddLiq() {
   const onConnectWallet = walletStore.connectWallet;
   const poolStore = usePoolStore();
   const hasMounted = useHasMounted();
-  const balanceStore = useBalancesStore();
   const client = useClientStore();
   const { toast } = useToast();
   const calculateQuote = (
