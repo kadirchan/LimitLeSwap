@@ -36,10 +36,10 @@ export default function Positions() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Pair</TableHead>
-                  <TableHead>Pool Tokens</TableHead>
-                  <TableHead>Reserved Tokens</TableHead>
-                  <TableHead>Pool Share</TableHead>
+                  <TableHead className="text-center">Pair</TableHead>
+                  <TableHead className="text-center">Pool Tokens</TableHead>
+                  <TableHead className="text-center">Reserved Tokens</TableHead>
+                  <TableHead className="text-center">Pool Share</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -104,50 +104,48 @@ export default function Positions() {
                           </DialogTitle>
                           <DialogDescription>
                             As you provide liquidity, you receive a share of the
-                            0.3% fee cut from all transactions made on the pool
-                            according to your pool share.
+                            0.3% fee cut from all swap transactions made on the
+                            pool according to your pool share.
                           </DialogDescription>
                         </DialogHeader>
 
                         <div className=" flex flex-col gap-2 p-2">
                           <div className=" flex w-full flex-row justify-between">
                             <div className="flex text-base">
-                              Your Pool Token Amount:
+                              LP Token Amount:
                             </div>
                             <div className="flex">
                               {(
                                 Number(position.lpTokenAmount) /
                                 Number(DECIMALS)
-                              ).toFixed(2)}
+                              ).toFixed(3)}
                             </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
                             <div className="flex text-base">
-                              Your Pooled {position.token0.name} Amount:
+                              Pooled {position.token0.name} Amount:
                             </div>
                             <div className="flex">
                               {(
                                 Number(position.token0Amount) / Number(DECIMALS)
-                              ).toFixed(2)}
+                              ).toFixed(3)}
                             </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
                             <div className="flex text-base">
-                              Your Pooled {position.token1.name} Amount:
+                              Pooled {position.token1.name} Amount:
                             </div>
                             <div className="flex">
                               {(
                                 Number(position.token1Amount) / Number(DECIMALS)
-                              ).toFixed(2)}
+                              ).toFixed(3)}
                             </div>
                           </div>
 
                           <div className=" flex w-full flex-row justify-between">
-                            <div className="flex text-base">
-                              Your Pool Share:
-                            </div>
+                            <div className="flex text-base">Pool Share:</div>
                             <div className="flex">
                               {(Number(position.lpTokenAmount) /
                                 Number(position.lpTokenTotalSupply)) *
