@@ -101,13 +101,18 @@ export default function RemoveLiq() {
 
       //@ts-ignore
       walletStore.addPendingTransaction(tx.transaction);
+
+      setState({
+        ...state,
+        removeAmount: 0,
+      });
     }
   };
   return (
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
         <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Card className="w-full border-0 p-4 shadow-none">
+          <Card className="flex w-full flex-col items-center border-0 p-4 shadow-none">
             <div className="mb-2 flex flex-row items-center justify-center gap-2">
               <h2 className="text-2xl font-bold">Remove Liquidity</h2>
               <Flame className="h-6 w-6" />
@@ -152,7 +157,11 @@ export default function RemoveLiq() {
                 <Select
                   value={state.selectedPosition}
                   onValueChange={(value) => {
-                    setState({ ...state, selectedPosition: value });
+                    setState({
+                      ...state,
+                      selectedPosition: value,
+                      removeAmount: 0,
+                    });
                   }}
                   disabled={poolStore.positionList.length === 0}
                 >
@@ -207,11 +216,11 @@ export default function RemoveLiq() {
               />
             </div>
 
-            <div className="my-2 flex w-96 items-center justify-center">
+            <div className="my-2 flex w-10 items-center justify-center">
               <ArrowDown className="h-6 w-6" />
             </div>
 
-            <div className=" flex flex-col items-center justify-center rounded-2xl border p-4">
+            <div className=" flex w-full flex-col items-center justify-center rounded-2xl border p-4">
               {position ? (
                 <>
                   <h3 className="text-base">You will receive</h3>
