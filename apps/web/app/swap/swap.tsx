@@ -59,7 +59,6 @@ export default function Swap() {
     poolSellTokenReserve: number,
     sellAmount: number,
   ) => {
-    // console.table([poolBuyTokenReserve, poolSellTokenReserve, sellAmount]);
     const amountInWithFee = sellAmount * 997;
 
     const numerator = poolBuyTokenReserve * poolSellTokenReserve * 1000;
@@ -68,8 +67,6 @@ export default function Swap() {
 
     const price = (amountOut / sellAmount).toFixed(2);
     const priceImpact = (amountOut / poolBuyTokenReserve) * 100;
-
-    // console.table([amountOut, price, priceImpact, amountInWithFee]);
 
     return {
       amountOut,
@@ -345,7 +342,7 @@ export default function Swap() {
     <div className="mx-auto -mt-32 h-full pt-16">
       <div className="flex h-full w-full items-center justify-center pt-16">
         <div className="flex basis-4/12 flex-col items-center justify-center 2xl:basis-3/12">
-          <Card className="w-full border-0 p-4 shadow-none">
+          <Card className="flex w-full flex-col items-center border-0 p-4 shadow-none">
             <div className="mb-2 flex flex-row items-center justify-center gap-2">
               <h2 className="text-2xl font-bold">Swap</h2>
               <Route className="h-6 w-6"></Route>
@@ -387,7 +384,7 @@ export default function Swap() {
               </Select>
             </div>
 
-            <div className="relative my-2 w-96">
+            <div className="relative my-2 w-10">
               <Button
                 variant={"outline"}
                 className=" absolute bottom-0 left-0 right-0 top-0 mx-auto my-auto border-0  ring-1 ring-border ring-offset-4 hover:bg-card"
@@ -407,7 +404,7 @@ export default function Swap() {
               </Button>
             </div>
 
-            <div className="mt-4 flex flex-row items-center rounded-2xl border p-4">
+            <div className=" flex flex-row items-center rounded-2xl border p-4">
               <Label className="px-3 text-sm text-gray-600">
                 Buy
                 <CustomInput
