@@ -37,7 +37,7 @@ export default function Swap() {
   });
 
   const [pool, setPool] = useState<Pool | null>(null);
-  const [seePoolDetails, setSeePoolDetails] = useState(true);
+  const [seePoolDetails, setSeePoolDetails] = useState(false);
   const [newPool, setNewPool] = useState<Pool | null>(null);
   const [limitState, setlimitState] = useState<{
     execute: boolean;
