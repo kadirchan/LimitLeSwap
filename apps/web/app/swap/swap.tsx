@@ -245,10 +245,12 @@ export default function Swap() {
             token0: pool.token0,
             token1: pool.token1,
             token0Amount: (
-              Number(pool.token0Amount) - limitTotalAmountOut
+              Number(pool.token0Amount) +
+              (sellAmount - limitTotalAmountIn)
             ).toString(),
             token1Amount: (
-              Number(pool.token1Amount) + limitTotalAmountIn
+              Number(pool.token1Amount) -
+              (bestAmountOut - limitTotalAmountOut)
             ).toString(),
             lpTokenSupply: pool.lpTokenSupply,
           };
@@ -525,28 +527,32 @@ export default function Swap() {
 
             {seePoolDetails && pool ? (
               <>
-                <p
-                  className=" text-custom-input mt-2 flex w-full cursor-pointer justify-start px-2"
-                  onClick={() => {
-                    setSeePoolDetails(false);
-                  }}
-                >
-                  Hide Impact Chart
-                </p>
+                <div className="mt-2 flex w-full justify-start px-2">
+                  <p
+                    className=" text-custom-input cursor-pointer text-sm"
+                    onClick={() => {
+                      setSeePoolDetails(false);
+                    }}
+                  >
+                    Hide Impact Chart
+                  </p>
+                </div>
                 <PoolRatio
                   pool={pool}
                   newPool={newPool ? newPool : undefined}
                 />
               </>
             ) : (
-              <p
-                className=" text-custom-input mt-2 flex w-full cursor-pointer justify-start px-2"
-                onClick={() => {
-                  setSeePoolDetails(true);
-                }}
-              >
-                See Your Impact
-              </p>
+              <div className="mt-2 flex w-full justify-start px-2">
+                <p
+                  className=" text-custom-input cursor-pointer text-sm"
+                  onClick={() => {
+                    setSeePoolDetails(true);
+                  }}
+                >
+                  Show Impact Chart
+                </p>
+              </div>
             )}
           </Card>
         </div>

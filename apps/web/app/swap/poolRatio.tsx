@@ -15,7 +15,7 @@ const chartConfig = {
   },
   MINA: {
     label: "MINA",
-    color: "hsl(271.5 81.3% 55.9%)",
+    color: "hsl(272.1 71.7% 47.1%)",
   },
   USDT: {
     label: "USDT",
@@ -81,6 +81,7 @@ export default function PoolRatio({
             dataKey="amount"
             outerRadius={80}
             isAnimationActive={false}
+            stroke="white"
           >
             <LabelList
               dataKey="token"
@@ -99,6 +100,7 @@ export default function PoolRatio({
               innerRadius={90}
               outerRadius={120}
               isAnimationActive={false}
+              stroke="white"
             />
           )}
         </PieChart>
