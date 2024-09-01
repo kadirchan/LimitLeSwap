@@ -22,6 +22,7 @@ import { Field, Poseidon, PublicKey } from "o1js";
 import { useLimitStore } from "@/lib/stores/limitStore";
 import { useChainStore } from "@/lib/stores/chain";
 import { DECIMALS } from "@/lib/constants";
+import PoolRatio from "./poolRatio";
 
 export default function Swap() {
   const walletStore = useWalletStore();
@@ -36,6 +37,8 @@ export default function Swap() {
   });
 
   const [pool, setPool] = useState<Pool | null>(null);
+  const [seePoolDetails, setSeePoolDetails] = useState(true);
+  const [newPool, setNewPool] = useState<Pool | null>(null);
   const [limitState, setlimitState] = useState<{
     execute: boolean;
     ordersToFill: null | any[];
@@ -198,6 +201,7 @@ export default function Swap() {
           buyAmount: 0,
           priceImpact: "0",
         });
+        setNewPool(null);
         return;
       } else {
         const { amountOut, price, priceImpact } = calculateSwap(
@@ -225,6 +229,31 @@ export default function Swap() {
             bestAmountOut: bestAmountOut,
             newPriceImpact: Number(newPriceImpact.toFixed(1)),
           });
+
+          const limitTotalAmountIn = ordersToFill.reduce(
+            (acc, order) => acc + order.amountIn,
+            0,
+          );
+
+          const limitTotalAmountOut = ordersToFill.reduce(
+            (acc, order) => acc + order.amountOut,
+            0,
+          );
+
+          const afterPool: Pool = {
+            poolId: pool.poolId,
+            token0: pool.token0,
+            token1: pool.token1,
+            token0Amount: (
+              Number(pool.token0Amount) - limitTotalAmountOut
+            ).toString(),
+            token1Amount: (
+              Number(pool.token1Amount) + limitTotalAmountIn
+            ).toString(),
+            lpTokenSupply: pool.lpTokenSupply,
+          };
+
+          setNewPool(afterPool);
         } else {
           setlimitState({
             execute: false,
@@ -232,6 +261,17 @@ export default function Swap() {
             bestAmountOut: 0,
             newPriceImpact: 0,
           });
+
+          const afterPool: Pool = {
+            poolId: pool.poolId,
+            token0: pool.token0,
+            token1: pool.token1,
+            token0Amount: (Number(pool.token0Amount) + sellAmount).toString(),
+            token1Amount: (Number(pool.token1Amount) - amountOut).toString(),
+            lpTokenSupply: pool.lpTokenSupply,
+          };
+
+          setNewPool(afterPool);
         }
 
         setState({
@@ -482,6 +522,32 @@ export default function Swap() {
                   : "Pool Not Found"
                 : "Connect wallet"}
             </Button>
+
+            {seePoolDetails && pool ? (
+              <>
+                <p
+                  className=" text-custom-input mt-2 flex w-full cursor-pointer justify-start px-2"
+                  onClick={() => {
+                    setSeePoolDetails(false);
+                  }}
+                >
+                  Hide Impact Chart
+                </p>
+                <PoolRatio
+                  pool={pool}
+                  newPool={newPool ? newPool : undefined}
+                />
+              </>
+            ) : (
+              <p
+                className=" text-custom-input mt-2 flex w-full cursor-pointer justify-start px-2"
+                onClick={() => {
+                  setSeePoolDetails(true);
+                }}
+              >
+                See Your Impact
+              </p>
+            )}
           </Card>
         </div>
       </div>
