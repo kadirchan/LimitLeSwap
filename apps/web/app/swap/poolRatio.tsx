@@ -82,6 +82,8 @@ export default function PoolRatio({
             outerRadius={80}
             isAnimationActive={false}
             stroke="white"
+            startAngle={90}
+            endAngle={450}
           >
             <LabelList
               dataKey="token"
@@ -101,6 +103,8 @@ export default function PoolRatio({
               outerRadius={120}
               isAnimationActive={false}
               stroke="white"
+              startAngle={90}
+              endAngle={450}
             />
           )}
         </PieChart>

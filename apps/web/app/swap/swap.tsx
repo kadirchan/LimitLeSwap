@@ -240,22 +240,41 @@ export default function Swap() {
             0,
           );
 
-          const afterPool: Pool = {
-            poolId: pool.poolId,
-            token0: pool.token0,
-            token1: pool.token1,
-            token0Amount: (
-              Number(pool.token0Amount) +
-              (sellAmount - limitTotalAmountIn)
-            ).toString(),
-            token1Amount: (
-              Number(pool.token1Amount) -
-              (bestAmountOut - limitTotalAmountOut)
-            ).toString(),
-            lpTokenSupply: pool.lpTokenSupply,
-          };
+          if (pool.token0.name === sellToken?.name) {
+            const afterPool: Pool = {
+              poolId: pool.poolId,
+              token0: pool.token0,
+              token1: pool.token1,
+              token0Amount: (
+                Number(pool.token0Amount) +
+                (sellAmount - limitTotalAmountIn)
+              ).toString(),
+              token1Amount: (
+                Number(pool.token1Amount) -
+                (bestAmountOut - limitTotalAmountOut)
+              ).toString(),
+              lpTokenSupply: pool.lpTokenSupply,
+            };
 
-          setNewPool(afterPool);
+            setNewPool(afterPool);
+          } else {
+            const afterPool: Pool = {
+              poolId: pool.poolId,
+              token0: pool.token0,
+              token1: pool.token1,
+              token0Amount: (
+                Number(pool.token0Amount) -
+                (bestAmountOut - limitTotalAmountOut)
+              ).toString(),
+              token1Amount: (
+                Number(pool.token1Amount) +
+                (sellAmount - limitTotalAmountIn)
+              ).toString(),
+              lpTokenSupply: pool.lpTokenSupply,
+            };
+
+            setNewPool(afterPool);
+          }
         } else {
           setlimitState({
             execute: false,
@@ -264,16 +283,29 @@ export default function Swap() {
             newPriceImpact: 0,
           });
 
-          const afterPool: Pool = {
-            poolId: pool.poolId,
-            token0: pool.token0,
-            token1: pool.token1,
-            token0Amount: (Number(pool.token0Amount) + sellAmount).toString(),
-            token1Amount: (Number(pool.token1Amount) - amountOut).toString(),
-            lpTokenSupply: pool.lpTokenSupply,
-          };
+          if (pool.token0.name === sellToken?.name) {
+            const afterPool: Pool = {
+              poolId: pool.poolId,
+              token0: pool.token0,
+              token1: pool.token1,
+              token0Amount: (Number(pool.token0Amount) + sellAmount).toString(),
+              token1Amount: (Number(pool.token1Amount) - amountOut).toString(),
+              lpTokenSupply: pool.lpTokenSupply,
+            };
 
-          setNewPool(afterPool);
+            setNewPool(afterPool);
+          } else {
+            const afterPool: Pool = {
+              poolId: pool.poolId,
+              token0: pool.token0,
+              token1: pool.token1,
+              token0Amount: (Number(pool.token0Amount) - amountOut).toString(),
+              token1Amount: (Number(pool.token1Amount) + sellAmount).toString(),
+              lpTokenSupply: pool.lpTokenSupply,
+            };
+
+            setNewPool(afterPool);
+          }
         }
 
         setState({
