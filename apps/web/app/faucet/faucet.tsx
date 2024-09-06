@@ -70,15 +70,35 @@ export default function Faucet() {
                 }}
               >
                 <SelectTrigger className=" w-60 rounded-2xl">
-                  <img src={`/${token}.png`} className=" h-4 w-4" />
+                  {/* <img src={`/${token}.png`} className=" h-4 w-4" /> */}
                   <SelectValue placeholder="Select a token to drip" />
                 </SelectTrigger>
 
                 <SelectContent className=" items-center  rounded-2xl text-center">
-                  <SelectItem value="MINA">MINA</SelectItem>
-                  <SelectItem value="USDT">USDT</SelectItem>
-                  <SelectItem value="ETH">ETH</SelectItem>
-                  <SelectItem value="BTC">BTC</SelectItem>
+                  <SelectItem value="MINA">
+                    <div className=" flex w-full flex-row gap-4">
+                      <img src={`/MINA.png`} className=" h-4 w-4" />
+                      MINA
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="USDT">
+                    <div className=" flex w-full flex-row gap-4">
+                      <img src={`/USDT.png`} className=" h-4 w-4" />
+                      USDT
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="ETH">
+                    <div className=" flex w-full flex-row gap-4">
+                      <img src={`/ETH.png`} className=" h-4 w-4" />
+                      ETH
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="BTC">
+                    <div className=" flex w-full flex-row gap-4">
+                      <img src={`/BTC.png`} className=" h-4 w-4" />
+                      BTC
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -86,7 +106,7 @@ export default function Faucet() {
                 size={"lg"}
                 type="submit"
                 className=" w-full rounded-2xl"
-                disabled={!wallet || loading}
+                disabled={loading}
                 onClick={() => {
                   wallet ?? onConnectWallet();
                   wallet && drip();
