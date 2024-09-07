@@ -1,3 +1,12 @@
+## Important
+### Running in-memory
+
+```zsh
+pnpm env:inmemory my-dev
+```
+
+Navigate to `localhost:3000` to see the UI, or to `localhost:8080/graphql` to see the GQL interface of the locally running sequencer.
+
 # LimitLe Swap
 LimitLeSwap is a DEX-appchain where users can leverage Mina to make the most efficient use of AMM and Order book exchanges at the same time.
 
@@ -24,15 +33,6 @@ The monorepo contains 1 package and 1 app:
 For running with persistance / deploying on a server
 - docker `>= 24.0`
 - docker-compose `>= 2.22.0`
-
-### Running in-memory
-
-```zsh
-# starts both UI and sequencer locally
-pnpm env:inmemory my-dev
-```
-
-Navigate to `localhost:3000` to see the example UI, or to `localhost:8080/graphql` to see the GQL interface of the locally running sequencer.
 
 ### Running tests
 ```zsh
